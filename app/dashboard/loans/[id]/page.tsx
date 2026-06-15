@@ -74,33 +74,24 @@ export default function LoanDetailsPage() {
 					)}
 				</div>
 			</div>
-		</div>
-		
-		<div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
-			<div>
-				{/* Payment history and status */}
-				{/* @ts-ignore */}
-				<PaymentHistory loanId={loan.id} />
-			</div>
-			<div className="p-4 rounded-lg bg-white border shadow-sm">
-				<div className="font-semibold mb-2">Loan Details</div>
-				<div className="text-sm text-gray-700 space-y-1">
-					<div>Total Loan: <span className="font-medium">KSh {loan.total_amount?.toLocaleString?.()}</span></div>
-					<div>Amount Paid: <span className="font-medium">KSh {(loan.total_amount - loan.remaining_amount)?.toLocaleString?.()}</span></div>
-					<div>Remaining: <span className="font-medium">KSh {loan.remaining_amount?.toLocaleString?.()}</span></div>
-					<div>Due Date: <span className="font-medium">{loan.due_date}</span></div>
-					<div>Status: <span className="font-medium"><LoanStatusBadge status={loan.status} /></span></div>
+
+			<div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
+				<div>
+					{/* Payment history and status */}
+					{/* @ts-ignore */}
+					<PaymentHistory loanId={loan.id} />
+				</div>
+				<div className="p-4 rounded-lg bg-white border shadow-sm">
+					<div className="font-semibold mb-2">Loan Details</div>
+					<div className="text-sm text-gray-700 space-y-1">
+						<div>Total Loan: <span className="font-medium">KSh {loan.total_amount?.toLocaleString?.()}</span></div>
+						<div>Amount Paid: <span className="font-medium">KSh {(loan.total_amount - loan.remaining_amount)?.toLocaleString?.()}</span></div>
+						<div>Remaining: <span className="font-medium">KSh {loan.remaining_amount?.toLocaleString?.()}</span></div>
+						<div>Due Date: <span className="font-medium">{loan.due_date}</span></div>
+						<div>Status: <span className="font-medium"><LoanStatusBadge status={loan.status} /></span></div>
+					</div>
 				</div>
 			</div>
 		</div>
 	);
 }
-
-
-
-
-
-
-
-
-
