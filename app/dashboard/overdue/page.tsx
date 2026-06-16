@@ -46,6 +46,7 @@ function OverdueManager() {
   const [overdue, setOverdue] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [amounts, setAmounts] = useState<Record<number, string>>({});
+  const [downloading, setDownloading] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -55,6 +56,30 @@ function OverdueManager() {
       setOverdue(Array.isArray(data) ? data : []);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadOverdueReport = async () => {
+    try {
+      setDownloading(true);
+      const response = await api.get<Response>("/dashboard/overdue-report", {
+        rawResponse: true,
+      });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `overdue_report_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success("Overdue report downloaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download overdue report");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -113,6 +138,13 @@ function OverdueManager() {
             className="px-4 py-2 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-300"
           >
             Refresh list
+          </button>
+          <button
+            onClick={handleDownloadOverdueReport}
+            disabled={downloading}
+            className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 disabled:opacity-50"
+          >
+            {downloading ? "Downloading..." : "Download PDF"}
           </button>
           <button
             onClick={() => router.push("/dashboard")}
