@@ -391,7 +391,6 @@ export default function CustomerDetailsPage() {
     </section>
   );
 }
-}
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
