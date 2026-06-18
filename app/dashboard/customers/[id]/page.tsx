@@ -382,15 +382,13 @@ export default function CustomerDetailsPage() {
           </div>
         )}
       </div>
+      <LoanStatementModal
+        customerId={String(customerId)}
+        customerName={data?.name || ""}
+        isOpen={showLoanStatementModal}
+        onClose={() => setShowLoanStatementModal(false)}
+      />
     </section>
-
-    <LoanStatementModal
-      customerId={String(customerId)}
-      customerName={data?.name || ""}
-      isOpen={showLoanStatementModal}
-      onClose={() => setShowLoanStatementModal(false)}
-    />
-  </section>;
 }
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
