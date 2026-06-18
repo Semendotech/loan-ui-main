@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import toast from "react-hot-toast";
+import LoanStatementModal from "@/components/LoanStatementModal";
 
 export default function CustomerDetailsPage() {
   const { loading: authLoading, isAuthenticated } = useAuth();
@@ -18,6 +19,7 @@ export default function CustomerDetailsPage() {
   const [downloading, setDownloading] = useState(false);
   const [editingInstallmentId, setEditingInstallmentId] = useState<number | null>(null);
   const [installmentAmounts, setInstallmentAmounts] = useState<Record<number, string>>({});
+  const [showLoanStatementModal, setShowLoanStatementModal] = useState(false);
 
   // Derived summary metrics
   const now = new Date();
@@ -290,13 +292,21 @@ export default function CustomerDetailsPage() {
       <div className="bg-white p-6 rounded shadow-sm">
         <h3 className="text-lg font-semibold flex justify-between items-center">
           <span>Recent Installments</span>
-          <button
-            onClick={handleGeneratePDF}
-            disabled={downloading}
-            className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {downloading ? "Generating..." : "Download PDF Report"}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowLoanStatementModal(true)}
+              className="bg-green-600 text-white px-4 py-2 text-sm rounded-md hover:bg-green-700"
+            >
+              Loan Statement
+            </button>
+            <button
+              onClick={handleGeneratePDF}
+              disabled={downloading}
+              className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+            >
+              {downloading ? "Generating..." : "Download PDF Report"}
+            </button>
+          </div>
         </h3>
 
         {(data.installments || []).length === 0 ? (
@@ -373,7 +383,14 @@ export default function CustomerDetailsPage() {
         )}
       </div>
     </section>
-  );
+
+    <LoanStatementModal
+      customerId={String(customerId)}
+      customerName={data?.name || ""}
+      isOpen={showLoanStatementModal}
+      onClose={() => setShowLoanStatementModal(false)}
+    />
+  </section>;
 }
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {

@@ -1,12 +1,31 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
 import config from "@/lib/config";
 import { uploadCustomerImage } from "@/lib/cloudinary";
 import toast from "react-hot-toast";
+import {
+  normalizePhone,
+  validateCustomerForm,
+  validateIdNumber,
+  validateCustomerName,
+  validateCustomerLocation,
+  validatePhone,
+} from "@/lib/customerValidation";
+import {
+  calculateDailyInstalment,
+  formatKesCurrency,
+  isValidDailyInstalment,
+  validateLoanForm,
+} from "@/lib/loanCalculations";
+import {
+  buildGuarantorPayload,
+  validateGuarantorField,
+  validateGuarantorForm,
+} from "@/lib/guarantorValidation";
 
 interface Customer {
   name: string;
@@ -69,6 +88,57 @@ export default function AddLoanForm() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [useCamera, setUseCamera] = useState<boolean | null>(null);
+  const [customerFieldErrors, setCustomerFieldErrors] = useState<
+    Partial<Record<keyof Customer, string>>
+  >({});
+  const [loanFieldErrors, setLoanFieldErrors] = useState<
+    Partial<Record<"amount" | "interest_rate" | "start_date", string>>
+  >({});
+  const [guarantorFieldErrors, setGuarantorFieldErrors] = useState<
+    Partial<Record<keyof typeof guarantorForm, string>>
+  >({});
+
+  const dailyInstalment = useMemo(() => {
+    const amount = parseFloat(loanForm.amount);
+    const rate = parseFloat(loanForm.interest_rate);
+    return calculateDailyInstalment(amount, rate);
+  }, [loanForm.amount, loanForm.interest_rate]);
+
+  const validateCustomerField = (name: string, value: string): string => {
+    switch (name) {
+      case "name":
+        return validateCustomerName(value) || "";
+      case "id_number":
+        return validateIdNumber(value) || "";
+      case "phone":
+        return validatePhone(value) || "";
+      case "location":
+        return validateCustomerLocation(value) || "";
+      default:
+        return "";
+    }
+  };
+
+  const fieldClassName = (field: keyof Customer, readOnly = false) => {
+    const hasError = !!customerFieldErrors[field];
+    return `w-full px-4 py-2 border rounded-md text-black focus:ring-green-500 focus:border-green-500 ${
+      hasError ? "border-red-500 focus:ring-red-200 focus:border-red-500" : "border-gray-300"
+    } ${readOnly ? "bg-gray-50" : ""}`;
+  };
+
+  const loanFieldClassName = (field: "amount" | "interest_rate" | "start_date") => {
+    const hasError = !!loanFieldErrors[field];
+    return `w-full px-4 py-2 border rounded-md text-black focus:ring-green-500 focus:border-green-500 ${
+      hasError ? "border-red-500 focus:ring-red-200 focus:border-red-500" : "border-gray-300"
+    }`;
+  };
+
+  const guarantorFieldClassName = (field: keyof typeof guarantorForm) => {
+    const hasError = !!guarantorFieldErrors[field];
+    return `w-full px-4 py-2 border rounded-md text-black focus:ring-green-500 focus:border-green-500 ${
+      hasError ? "border-red-500 focus:ring-red-200 focus:border-red-500" : "border-gray-300"
+    }`;
+  };
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -77,6 +147,11 @@ export default function AddLoanForm() {
   }, [isAuthenticated, loading, router]);
 
   const handleLookup = async () => {
+    const lookupIdError = validateIdNumber(customerIdNumber);
+    if (lookupIdError) {
+      toast.error(lookupIdError);
+      return;
+    }
     if (!customerIdNumber) {
       toast.error("Please enter ID Number");
       return;
@@ -129,7 +204,8 @@ export default function AddLoanForm() {
         setCustomerExists(false);
         setSelectedCustomerId(null);
         setCustomerPhotoUrl(null);
-        setCustomerForm({ name: "", id_number: "", phone: "", location: "", profile_image_url: "" });
+        setCustomerForm({ name: "", id_number: customerIdNumber.trim(), phone: "", location: "", profile_image_url: "" });
+        setCustomerFieldErrors({});
         toast("Customer not found. Please add new customer details.");
         setExistingLoans([]);
         setExistingOverdue([]);
@@ -147,16 +223,49 @@ export default function AddLoanForm() {
   const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setCustomerForm((prev) => ({ ...prev, [name]: value }));
+    if (!customerExists) {
+      setCustomerFieldErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleCustomerBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (customerExists) return;
+    const { name, value } = e.target;
+    setCustomerFieldErrors((prev) => ({
+      ...prev,
+      [name]: validateCustomerField(name, value),
+    }));
   };
 
   const handleLoanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setLoanForm((prev) => ({ ...prev, [name]: value }));
+    setLoanFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleLoanBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    const errors = validateLoanForm(loanForm);
+    setLoanFieldErrors((prev) => ({
+      ...prev,
+      [name]: errors[name as keyof typeof errors] || "",
+    }));
   };
 
   const handleGuarantorChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setGuarantorForm((prev) => ({ ...prev, [name]: value }));
+    setGuarantorFieldErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  const handleGuarantorBlur = (
+    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setGuarantorFieldErrors((prev) => ({
+      ...prev,
+      [name]: validateGuarantorField(name, value),
+    }));
   };
 
   const handlePhotoButtonClick = (camera: boolean) => {
@@ -211,29 +320,54 @@ export default function AddLoanForm() {
     setIsSubmitting(true);
     try {
       if (!customerExists) {
-        if (!customerForm.id_number) {
-          toast.error("ID Number is required for new customers");
+        const errors = validateCustomerForm(customerForm);
+        if (Object.keys(errors).length > 0) {
+          setCustomerFieldErrors(errors);
+          toast.error("Please fix the customer form errors before submitting.");
           setIsSubmitting(false);
           return;
         }
-        const createdCustomer = await api.post<(Customer & { id: number })>("/customers", customerForm);
+
+        const customerPayload = {
+          name: customerForm.name.trim(),
+          id_number: customerForm.id_number.trim(),
+          phone: normalizePhone(customerForm.phone),
+          location: (customerForm.location || "").trim(),
+          profile_image_url: customerForm.profile_image_url || undefined,
+        };
+
+        const createdCustomer = await api.post<(Customer & { id: number })>(
+          "/customers",
+          customerPayload
+        );
         setCustomerExists(true);
         setSelectedCustomerId(createdCustomer.id);
+        setCustomerForm((prev) => ({ ...prev, phone: customerPayload.phone }));
       }
-      const loanData: any = {
-        id_number: customerForm.id_number,
-        amount: parseFloat(loanForm.amount),
-        interest_rate: parseFloat(loanForm.interest_rate),
-        start_date: loanForm.start_date,
-      };
 
-      // Always include guarantor (required)
-      loanData.guarantor = {
-        name: guarantorForm.name,
-        id_number: guarantorForm.id_number,
-        phone: guarantorForm.phone,
-        location: guarantorForm.location || undefined,
-        relationship: guarantorForm.relationship || undefined,
+      const loanErrors = validateLoanForm(loanForm);
+      const guarantorErrors = validateGuarantorForm(guarantorForm);
+      const amount = parseFloat(loanForm.amount);
+      const interestRate = parseFloat(loanForm.interest_rate);
+
+      if (
+        Object.keys(loanErrors).length > 0 ||
+        Object.keys(guarantorErrors).length > 0 ||
+        !isValidDailyInstalment(amount, interestRate)
+      ) {
+        setLoanFieldErrors(loanErrors);
+        setGuarantorFieldErrors(guarantorErrors);
+        toast.error("Please fix the loan and guarantor form errors before submitting.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const loanData: any = {
+        id_number: customerForm.id_number.trim(),
+        amount,
+        interest_rate: interestRate,
+        start_date: loanForm.start_date,
+        guarantor: buildGuarantorPayload(guarantorForm),
       };
 
       const createdLoan = await api.post<CreatedLoanResponse>("/loans", loanData);
@@ -293,20 +427,32 @@ export default function AddLoanForm() {
             <div className="mt-4 flex flex-col lg:flex-row gap-6">
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <input type="text" id="name" name="name" value={customerForm.name} onChange={handleCustomerChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500" placeholder="Enter full name" required readOnly={customerExists} />
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                  <input type="text" id="name" name="name" value={customerForm.name} onChange={handleCustomerChange} onBlur={handleCustomerBlur} className={fieldClassName("name", customerExists)} placeholder="Enter full name" required readOnly={customerExists} />
+                  {!customerExists && customerFieldErrors.name && (
+                    <p className="text-sm text-red-600 mt-1">{customerFieldErrors.name}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="id_number" className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
-                  <input type="text" id="id_number" name="id_number" value={customerForm.id_number} onChange={handleCustomerChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500" placeholder="Enter ID number" required readOnly={customerExists} />
+                  <label htmlFor="id_number" className="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
+                  <input type="text" id="id_number" name="id_number" value={customerForm.id_number} onChange={handleCustomerChange} onBlur={handleCustomerBlur} className={fieldClassName("id_number", customerExists)} placeholder="Enter 8-digit ID number" required readOnly={customerExists} inputMode="numeric" pattern="\d{8}" maxLength={8} />
+                  {!customerExists && customerFieldErrors.id_number && (
+                    <p className="text-sm text-red-600 mt-1">{customerFieldErrors.id_number}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                  <input type="tel" id="phone" name="phone" value={customerForm.phone} onChange={handleCustomerChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500" placeholder="Enter phone number" required readOnly={customerExists} />
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                  <input type="tel" id="phone" name="phone" value={customerForm.phone} onChange={handleCustomerChange} onBlur={handleCustomerBlur} className={fieldClassName("phone", customerExists)} placeholder="e.g. 0712345678" required readOnly={customerExists} />
+                  {!customerExists && customerFieldErrors.phone && (
+                    <p className="text-sm text-red-600 mt-1">{customerFieldErrors.phone}</p>
+                  )}
                 </div>
                 <div>
-                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                  <input type="text" id="location" name="location" value={customerForm.location} onChange={handleCustomerChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500" placeholder="Enter location" required readOnly={customerExists} />
+                  <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                  <input type="text" id="location" name="location" value={customerForm.location} onChange={handleCustomerChange} onBlur={handleCustomerBlur} className={fieldClassName("location", customerExists)} placeholder="Enter location" required readOnly={customerExists} />
+                  {!customerExists && customerFieldErrors.location && (
+                    <p className="text-sm text-red-600 mt-1">{customerFieldErrors.location}</p>
+                  )}
                 </div>
               </div>
               <div className="w-full lg:w-64">
@@ -347,7 +493,7 @@ export default function AddLoanForm() {
                       {isUploadingPhoto ? "Uploading..." : customerPhotoUrl ? "Change Photo" : "Choose File"}
                   </button>
                   </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, WEBP up to 5MB. Stored securely on Cloudinary.</p>
+                  <p className="text-xs text-gray-500">Optional. PNG, JPG, WEBP up to 5MB. Stored securely on Cloudinary.</p>
                 </div>
               </div>
             </div>
@@ -402,25 +548,46 @@ export default function AddLoanForm() {
             <>
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4">Loan Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                   <div>
-                    <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">Loan Amount</label>
-                    <input type="number" id="amount" name="amount" value={loanForm.amount} onChange={handleLoanChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500" placeholder="Enter loan amount" required min="1" step="0.01" />
+                    <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">Loan Amount *</label>
+                    <input type="number" id="amount" name="amount" value={loanForm.amount} onChange={handleLoanChange} onBlur={handleLoanBlur} className={loanFieldClassName("amount")} placeholder="Enter loan amount" required min="0.01" step="0.01" />
+                    {loanFieldErrors.amount && (
+                      <p className="text-sm text-red-600 mt-1">{loanFieldErrors.amount}</p>
+                    )}
                   </div>
-              <div>
-                <label htmlFor="interest_rate" className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%)</label>
-                <input
-                  type="number"
-                  id="interest_rate"
-                  name="interest_rate"
-                  value={loanForm.interest_rate}
-                  readOnly
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-500 bg-gray-100 cursor-not-allowed"
-                />
-              </div>
                   <div>
-                    <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                    <input type="date" id="start_date" name="start_date" value={loanForm.start_date} onChange={handleLoanChange} className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500" required />
+                    <label htmlFor="interest_rate" className="block text-sm font-medium text-gray-700 mb-1">Interest Rate (%) *</label>
+                    <input
+                      type="number"
+                      id="interest_rate"
+                      name="interest_rate"
+                      value={loanForm.interest_rate}
+                      readOnly
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-500 bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="daily_instalment" className="block text-sm font-medium text-gray-700 mb-1">Daily Instalment</label>
+                    <input
+                      type="text"
+                      id="daily_instalment"
+                      name="daily_instalment"
+                      value={formatKesCurrency(dailyInstalment)}
+                      readOnly
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-gray-800 bg-green-50 font-semibold cursor-not-allowed"
+                    />
+                    {!isValidDailyInstalment(parseFloat(loanForm.amount), parseFloat(loanForm.interest_rate)) && loanForm.amount && (
+                      <p className="text-sm text-red-600 mt-1">Enter a valid loan amount to calculate daily instalment.</p>
+                    )}
+                  </div>
+                  <div>
+                    <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                    <input type="date" id="start_date" name="start_date" value={loanForm.start_date} onChange={handleLoanChange} onBlur={handleLoanBlur} className={loanFieldClassName("start_date")} required />
+                    {loanFieldErrors.start_date && (
+                      <p className="text-sm text-red-600 mt-1">{loanFieldErrors.start_date}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -436,10 +603,14 @@ export default function AddLoanForm() {
                       name="name"
                       value={guarantorForm.name}
                       onChange={handleGuarantorChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500"
+                      onBlur={handleGuarantorBlur}
+                      className={guarantorFieldClassName("name")}
                       placeholder="Enter guarantor full name"
                       required
                     />
+                    {guarantorFieldErrors.name && (
+                      <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.name}</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="guarantor_id_number" className="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
@@ -449,10 +620,17 @@ export default function AddLoanForm() {
                       name="id_number"
                       value={guarantorForm.id_number}
                       onChange={handleGuarantorChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500"
-                      placeholder="Enter guarantor ID number"
+                      onBlur={handleGuarantorBlur}
+                      className={guarantorFieldClassName("id_number")}
+                      placeholder="Enter 8-digit ID number"
                       required
+                      inputMode="numeric"
+                      pattern="\d{8}"
+                      maxLength={8}
                     />
+                    {guarantorFieldErrors.id_number && (
+                      <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.id_number}</p>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="guarantor_phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
@@ -462,19 +640,25 @@ export default function AddLoanForm() {
                       name="phone"
                       value={guarantorForm.phone}
                       onChange={handleGuarantorChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500"
-                      placeholder="Enter guarantor phone number"
+                      onBlur={handleGuarantorBlur}
+                      className={guarantorFieldClassName("phone")}
+                      placeholder="e.g. 0712345678"
                       required
                     />
+                    {guarantorFieldErrors.phone && (
+                      <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.phone}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="guarantor_relationship" className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                    <label htmlFor="guarantor_relationship" className="block text-sm font-medium text-gray-700 mb-1">Relationship *</label>
                     <select
                       id="guarantor_relationship"
                       name="relationship"
                       value={guarantorForm.relationship}
                       onChange={handleGuarantorChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500"
+                      onBlur={handleGuarantorBlur}
+                      className={guarantorFieldClassName("relationship")}
+                      required
                     >
                       <option value="">Select relationship</option>
                       <option value="Family">Family</option>
@@ -483,24 +667,42 @@ export default function AddLoanForm() {
                       <option value="Business Partner">Business Partner</option>
                       <option value="Other">Other</option>
                     </select>
+                    {guarantorFieldErrors.relationship && (
+                      <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.relationship}</p>
+                    )}
                   </div>
                   <div>
-                    <label htmlFor="guarantor_location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <label htmlFor="guarantor_location" className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
                     <input
                       type="text"
                       id="guarantor_location"
                       name="location"
                       value={guarantorForm.location}
                       onChange={handleGuarantorChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-black focus:ring-green-500 focus:border-green-500"
-                      placeholder="Enter guarantor location (optional)"
+                      onBlur={handleGuarantorBlur}
+                      className={guarantorFieldClassName("location")}
+                      placeholder="Enter guarantor location"
+                      required
                     />
+                    {guarantorFieldErrors.location && (
+                      <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.location}</p>
+                    )}
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <button type="submit" disabled={isSubmitting} className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50">
+                <button
+                  type="submit"
+                  disabled={
+                    isSubmitting ||
+                    !isValidDailyInstalment(
+                      parseFloat(loanForm.amount),
+                      parseFloat(loanForm.interest_rate)
+                    )
+                  }
+                  className="px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+                >
                   {isSubmitting ? "Creating Loan..." : "Create Loan"}
                 </button>
               </div>

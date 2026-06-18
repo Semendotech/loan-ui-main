@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, PlusCircle, CreditCard, Users } from "lucide-react";
+import { Menu, X, Home, PlusCircle, CreditCard, Users, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -48,6 +48,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NavLink href="/dashboard/active-loans" active={pathname?.startsWith("/dashboard/active-loans") ?? false}>
                   <CreditCard className="w-5 h-5" />
                   <span>Active Loans</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink href="/dashboard/cleared-loans" active={pathname?.startsWith("/dashboard/cleared-loans") ?? false}>
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>Cleared Loans</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink href="/dashboard/defaulters" active={pathname?.startsWith("/dashboard/defaulters") ?? false}>
+                  <AlertTriangle className="w-5 h-5" />
+                  <span>Defaulters</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink href="/dashboard/uncollected-dues" active={pathname?.startsWith("/dashboard/uncollected-dues") ?? false}>
+                  <AlertCircle className="w-5 h-5" />
+                  <span>Uncollected Dues</span>
                 </NavLink>
               </li>
               <li>

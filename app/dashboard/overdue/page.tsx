@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import { AlertTriangle, TrendingDown, CheckCircle, Download, RefreshCw } from "lucide-react";
+import { formatKesCurrency } from "@/lib/loanCalculations";
 
 export default function ClearOverduePage() {
   const { loading: authLoading, isAuthenticated } = useAuth();
@@ -32,12 +34,9 @@ export default function ClearOverduePage() {
   }
 
   return (
-    <section>
-      <h3 className="text-lg font-semibold mb-4">Clear Overdue Balances</h3>
-      <div className="bg-white p-6 rounded shadow-sm">
-        <OverdueManager />
-      </div>
-    </section>
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-slate-50">
+      <OverdueManager />
+    </div>
   );
 }
 
@@ -47,6 +46,7 @@ function OverdueManager() {
   const [loading, setLoading] = useState(false);
   const [amounts, setAmounts] = useState<Record<number, string>>({});
   const [downloading, setDownloading] = useState(false);
+  const [processingId, setProcessingId] = useState<number | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -91,23 +91,28 @@ function OverdueManager() {
     const amt = parseFloat(amounts[arrearsId] || "0");
     if (!amt || amt <= 0) return toast.error("Enter a valid amount");
     try {
+      setProcessingId(arrearsId);
       await api.post(`/arrears/${arrearsId}/installments`, { amount: amt });
       toast.success("Overdue payment recorded");
-      router.push("/dashboard");
       setAmounts((s) => ({ ...s, [arrearsId]: "" }));
       await load();
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || e?.message || "Failed");
+    } finally {
+      setProcessingId(null);
     }
   };
 
   const clear = async (arrearsId: number) => {
     try {
+      setProcessingId(arrearsId);
       await api.post(`/arrears/${arrearsId}/clear`, {});
       toast.success("Overdue cleared");
       await load();
     } catch (e: any) {
       toast.error(e?.response?.data?.detail || e?.message || "Failed");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -123,150 +128,230 @@ function OverdueManager() {
   }, [overdue]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <p className="text-sm uppercase tracking-wide text-green-700 font-semibold">Overdue portfolio</p>
-          <h2 className="text-2xl font-bold text-gray-900 mt-1">Track and clear outstanding balances</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Review overdue loans, collect weekly arrears, or clear the balance entirely.
-          </p>
+    <div className="space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+      {/* Header Section */}
+      <div className="space-y-6">
+        {/* Page Title */}
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-red-100 rounded-xl">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                Overdue Management
+              </h1>
+            </div>
+            <p className="text-gray-600 text-base sm:text-lg leading-relaxed ml-12">
+              Monitor and collect outstanding overdue balances from active loans
+            </p>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={load}
-            className="px-4 py-2 rounded-full border border-gray-200 text-sm font-medium text-gray-700 hover:border-gray-300"
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-300 transition disabled:opacity-50"
           >
-            Refresh list
+            <RefreshCw className="w-4 h-4" />
+            Refresh
           </button>
           <button
             onClick={handleDownloadOverdueReport}
             disabled={downloading}
-            className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
           >
-            {downloading ? "Downloading..." : "Download PDF"}
+            <Download className="w-4 h-4" />
+            {downloading ? "Downloading..." : "Print PDF"}
           </button>
           <button
             onClick={() => router.push("/dashboard")}
-            className="px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold shadow-sm hover:bg-green-700"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition"
           >
-            Go to Dashboard
+            Back to Dashboard
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="Active Overdues" value={summary.activeCount} accent="bg-rose-50" color="text-rose-700" />
-        <StatCard label="Cleared Overdues" value={summary.clearedCount} accent="bg-emerald-50" color="text-emerald-700" />
-        <StatCard
-          label="Outstanding Amount"
-          value={summary.totalOutstanding}
-          prefix="KSh "
-          accent="bg-blue-50"
-          color="text-blue-800"
-        />
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Active Overdues</p>
+              <p className="text-3xl font-bold text-red-600 mt-2">
+                {summary.activeCount}
+              </p>
+            </div>
+            <div className="p-3 bg-red-50 rounded-lg">
+              <TrendingDown className="w-6 h-6 text-red-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Cleared Overdues</p>
+              <p className="text-3xl font-bold text-green-600 mt-2">
+                {summary.clearedCount}
+              </p>
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-600 text-sm font-medium">Outstanding Amount</p>
+              <p className="text-3xl font-bold text-blue-600 mt-2">
+                {formatKesCurrency(summary.totalOutstanding)}
+              </p>
+            </div>
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <AlertTriangle className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+      {/* Content Section */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
         {loading ? (
-          <div className="flex items-center gap-3 text-sm text-gray-600">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
-            Loading overdue balances...
+          <div className="p-12 text-center">
+            <div className="inline-flex items-center gap-3 text-gray-600">
+              <span className="h-5 w-5 animate-spin rounded-full border-3 border-gray-300 border-t-gray-600" />
+              <span className="text-base font-medium">Loading overdue balances...</span>
+            </div>
           </div>
         ) : overdue.length === 0 ? (
-          <div className="text-sm text-gray-600">No overdue balances 🎉</div>
+          <div className="p-12 text-center">
+            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900">No Overdue Balances</h3>
+            <p className="text-gray-600 mt-2">Great work! All loans are current.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-            {overdue.map((a) => (
-              <div
-                key={a.id}
-                className="group relative p-5 rounded-2xl bg-white shadow-sm border border-gray-100 hover:shadow-lg transition"
-              >
-                <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-red-500/70 to-orange-400/70 opacity-0 group-hover:opacity-100 transition" />
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-wide text-gray-400">Overdue #{a.id}</div>
-                    <div className="text-xl font-semibold text-gray-900 mt-1">KSh {a.remaining_amount}</div>
-                    {a.customer_name && (
-                      <div className="text-sm font-medium text-gray-700 mt-1">Customer: {a.customer_name}</div>
-                    )}
-                    <div className="text-xs text-gray-500 mt-1">Customer ID: {a.customer_id}</div>
-                    <div className="text-xs text-gray-500">Loan ID: {a.loan_id}</div>
-                    <div className="text-xs text-gray-400 mt-2">Overdue since {a.arrears_date}</div>
-                  </div>
-                  <span
-                    className={`text-xs h-fit px-3 py-1 rounded-full ${
-                      a.is_cleared ? "bg-gray-100 text-gray-600" : "bg-rose-100 text-rose-700"
-                    }`}
-                  >
-                    {a.is_cleared ? "Cleared" : "Active"}
-                  </span>
-                </div>
-
-                {!a.is_cleared && (
-                  <div className="mt-4 space-y-3">
-                    <label className="text-xs font-medium text-gray-600">Amount to apply</label>
-                    <div className="flex flex-col sm:flex-row gap-3 w-full">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="Enter amount"
-                        value={amounts[a.id] || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          // Only allow numbers and decimal point
-                          if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                            setAmounts((s) => ({ ...s, [a.id]: value }));
-                          }
-                        }}
-                        className="w-full sm:flex-[2] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
-                      <div className="flex flex-col sm:flex-row gap-3 w-full sm:flex-[3]">
-                        <button
-                          onClick={() => pay(a.id)}
-                          className="w-full sm:flex-1 px-5 py-3 rounded-lg bg-green-600 text-white text-sm font-semibold shadow hover:bg-green-700"
-                        >
-                          Apply Payment
-                        </button>
-                        <button
-                          onClick={() => clear(a.id)}
-                          className="w-full sm:flex-1 px-5 py-3 rounded-lg bg-gray-900 text-white text-sm font-semibold shadow hover:bg-gray-800"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+          <div className="overflow-x-auto">
+            <div className="divide-y divide-gray-100">
+              {/* Table Header */}
+              <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 px-6 py-4 bg-gray-50 font-semibold text-gray-700 text-sm">
+                <div>Customer</div>
+                <div>ID Number</div>
+                <div>Outstanding</div>
+                <div>Days Overdue</div>
+                <div>Status</div>
+                <div>Action</div>
               </div>
-            ))}
+
+              {/* Table Rows */}
+              <div className="divide-y divide-gray-100">
+                {overdue.map((a) => (
+                  <div key={a.id} className="grid grid-cols-1 lg:grid-cols-6 gap-4 px-6 py-6 hover:bg-gray-50 transition">
+                    {/* Customer */}
+                    <div>
+                      <p className="font-semibold text-gray-900">{a.customer_name || "—"}</p>
+                      <p className="text-sm text-gray-600 mt-1">Loan #{a.loan_id}</p>
+                    </div>
+
+                    {/* ID Number */}
+                    <div>
+                      <p className="text-gray-900 font-medium">{a.customer_id || "—"}</p>
+                      <p className="text-sm text-gray-500 mt-1">Arrears #{a.id}</p>
+                    </div>
+
+                    {/* Outstanding */}
+                    <div>
+                      <p className="text-lg font-bold text-red-600">
+                        {formatKesCurrency(a.remaining_amount || 0)}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Original: {formatKesCurrency(a.original_amount || 0)}
+                      </p>
+                    </div>
+
+                    {/* Days Overdue */}
+                    <div>
+                      {a.arrears_date && (
+                        <>
+                          <p className="text-gray-900 font-medium">
+                            {Math.floor(
+                              (new Date().getTime() - new Date(a.arrears_date).getTime()) /
+                                (1000 * 60 * 60 * 24)
+                            )}{" "}
+                            days
+                          </p>
+                          <p className="text-sm text-gray-600 mt-1">{a.arrears_date}</p>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
+                          a.is_cleared
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {a.is_cleared ? "✓ Cleared" : "⚠ Active"}
+                      </span>
+                    </div>
+
+                    {/* Action */}
+                    {!a.is_cleared && (
+                      <div>
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="Amount"
+                              value={amounts[a.id] || ""}
+                              onChange={(e) =>
+                                setAmounts((s) => ({
+                                  ...s,
+                                  [a.id]: e.target.value,
+                                }))
+                              }
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => pay(a.id)}
+                              disabled={processingId === a.id}
+                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                              {processingId === a.id ? "..." : "Pay"}
+                            </button>
+                            <button
+                              onClick={() => clear(a.id)}
+                              disabled={processingId === a.id}
+                              className="flex-1 px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50"
+                            >
+                              {processingId === a.id ? "..." : "Clear"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {a.is_cleared && (
+                      <div className="flex items-center">
+                        <p className="text-sm text-gray-500">No action needed</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  prefix = "",
-  color = "text-gray-900",
-  accent = "bg-gray-50",
-}: {
-  label: string;
-  value: number;
-  prefix?: string;
-  color?: string;
-  accent?: string;
-}) {
-  return (
-    <div className={`p-4 rounded-2xl border border-gray-100 shadow-sm ${accent}`}>
-      <p className="text-xs uppercase tracking-wide text-gray-500">{label}</p>
-      <p className={`mt-2 text-2xl font-bold ${color}`}>
-        {prefix}
-        {new Intl.NumberFormat().format(value ?? 0)}
-      </p>
     </div>
   );
 }
