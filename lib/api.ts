@@ -2,15 +2,14 @@ import config from './config';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
-  rawResponse?: boolean; // 👈 added this line
+  rawResponse?: boolean;
 }
-// testing redeploy
-export async function apiRequest<T>(
 
+export async function apiRequest<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { params, rawResponse, ...fetchOptions } = options; // 👈 extract rawResponse
+  const { params, rawResponse, ...fetchOptions } = options;
   
   let url = `${config.api.baseUrl}${endpoint}`;
   if (params) {
@@ -44,7 +43,6 @@ export async function apiRequest<T>(
       throw new Error(errorData.detail || `API error: ${response.status}`);
     }
 
-    // 👇 Return raw response if requested (e.g., for PDF blobs)
     if (rawResponse) return response as unknown as T;
 
     if (response.headers.get('Content-Type')?.includes('application/json')) {
