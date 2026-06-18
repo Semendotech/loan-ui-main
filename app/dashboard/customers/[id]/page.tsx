@@ -389,6 +389,8 @@ export default function CustomerDetailsPage() {
         onClose={() => setShowLoanStatementModal(false)}
       />
     </section>
+  );
+}
 }
 
 function Info({ label, value }: { label: string; value: React.ReactNode }) {
