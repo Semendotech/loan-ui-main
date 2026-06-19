@@ -13,17 +13,27 @@ interface UncollectedDueItem {
   customer_id_number: string;
   daily_instalment: number;
   loan_balance: number;
+  skipped_days: number;
 }
 
 export default function UncollectedDuesPage() {
   const [dues, setDues] = useState<UncollectedDueItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    params.set("start_date", startDate);
+    params.set("end_date", endDate);
+    return `?${params.toString()}`;
+  };
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await api.get("/dashboard/uncollected-dues");
+      const data = await api.get(`/dashboard/uncollected-dues${buildQueryString()}`);
       const response = (data as { data?: { items?: UncollectedDueItem[] }; items?: UncollectedDueItem[] })?.data ?? data;
       const items = (response as { items?: UncollectedDueItem[] })?.items;
       setDues(Array.isArray(items) ? items : []);
@@ -42,14 +52,15 @@ export default function UncollectedDuesPage() {
   const handleDownloadReport = async () => {
     try {
       setDownloading(true);
-      const response = await api.get<Response>("/dashboard/uncollected-dues-report", {
+      const response = await api.get<Response>(`/dashboard/uncollected-dues-report${buildQueryString()}`, {
         rawResponse: true,
       });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `uncollected_dues_report_${new Date().toISOString().split("T")[0]}.pdf`;
+      const suffix = startDate === endDate ? startDate : `${startDate}_${endDate}`;
+      a.download = `uncollected_dues_report_${suffix}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -79,7 +90,21 @@ export default function UncollectedDuesPage() {
             Active loans where today's instalment payment has not been received
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
           <button onClick={load} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
             Refresh
           </button>
@@ -111,12 +136,15 @@ export default function UncollectedDuesPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Loan Balance
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  Skipped Days
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {!loading && dues.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
                     All dues have been collected for today.
                   </td>
                 </tr>
@@ -134,6 +162,9 @@ export default function UncollectedDuesPage() {
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-orange-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "…"}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                      {row.skipped_days != null ? `${row.skipped_days}` : "…"}
                     </td>
                   </tr>
                 ))

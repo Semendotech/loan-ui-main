@@ -11,6 +11,8 @@ interface DefaulterItem {
   customer_name: string | null;
   id_number: string;
   phone: string | null;
+  loan_amount: number;
+  date_loan_taken: string;
   loan_balance: number;
   days_defaulted: number;
 }
@@ -19,11 +21,20 @@ export default function DefaultersPage() {
   const [defaulters, setDefaulters] = useState<DefaulterItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+    params.set("start_date", startDate);
+    params.set("end_date", endDate);
+    return `?${params.toString()}`;
+  };
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await api.get("/dashboard/defaulters");
+      const data = await api.get(`/dashboard/defaulters${buildQueryString()}`);
       const response = (data as { data?: { items?: DefaulterItem[] }; items?: DefaulterItem[] })?.data ?? data;
       const items = (response as { items?: DefaulterItem[] })?.items;
       setDefaulters(Array.isArray(items) ? items : []);
@@ -42,14 +53,15 @@ export default function DefaultersPage() {
   const handleDownloadReport = async () => {
     try {
       setDownloading(true);
-      const response = await api.get<Response>("/dashboard/defaulters-report", {
+      const response = await api.get<Response>(`/dashboard/defaulters-report${buildQueryString()}`, {
         rawResponse: true,
       });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `defaulters_report_${new Date().toISOString().split("T")[0]}.pdf`;
+      const suffix = startDate === endDate ? startDate : `${startDate}_${endDate}`;
+      a.download = `defaulters_report_${suffix}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -79,7 +91,21 @@ export default function DefaultersPage() {
             Customers with 5 or more consecutive days without an instalment payment
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
+            />
+          </div>
           <button onClick={load} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
             Refresh
           </button>
@@ -109,6 +135,12 @@ export default function DefaultersPage() {
                   Phone Number
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  Loan Amount
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  Date Loan Taken
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Loan Balance
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
@@ -119,7 +151,7 @@ export default function DefaultersPage() {
             <tbody className="divide-y divide-gray-100">
               {!loading && defaulters.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-10 text-center text-gray-500">
                     No defaulters found.
                   </td>
                 </tr>
@@ -131,6 +163,12 @@ export default function DefaultersPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-800">{row.id_number ?? "…"}</td>
                     <td className="px-4 py-3 text-sm text-gray-800">{row.phone ?? "—"}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                      {row.loan_amount != null ? formatKesCurrency(row.loan_amount) : "…"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-800">
+                      {row.date_loan_taken ?? "—"}
+                    </td>
                     <td className="px-4 py-3 text-sm font-semibold text-red-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "…"}
                     </td>
