@@ -47,6 +47,15 @@ function OverdueManager() {
   const [amounts, setAmounts] = useState<Record<number, string>>({});
   const [downloading, setDownloading] = useState(false);
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+
+  const buildReportQuery = () => {
+    const params = new URLSearchParams();
+    params.set("start_date", startDate);
+    params.set("end_date", endDate);
+    return `?${params.toString()}`;
+  };
 
   const load = async () => {
     setLoading(true);
@@ -62,14 +71,15 @@ function OverdueManager() {
   const handleDownloadOverdueReport = async () => {
     try {
       setDownloading(true);
-      const response = await api.get<Response>("/dashboard/overdue-report", {
+      const response = await api.get<Response>(`/dashboard/overdue-report${buildReportQuery()}`, {
         rawResponse: true,
       });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `overdue_report_${new Date().toISOString().split("T")[0]}.pdf`;
+      const suffix = startDate === endDate ? startDate : `${startDate}_${endDate}`;
+      a.download = `overdue_report_${suffix}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -149,7 +159,21 @@ function OverdueManager() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-wrap gap-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm"
+            />
+          </div>
           <button
             onClick={load}
             disabled={loading}
