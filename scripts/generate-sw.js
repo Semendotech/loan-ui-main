@@ -1,5 +1,11 @@
-// Service Worker for PWA
-const CACHE_VERSION = 'loan-manager-cache-v1';
+const fs = require('fs');
+const path = require('path');
+
+const version = `loan-manager-cache-v${new Date().toISOString().replace(/[:.]/g, '-')}`;
+const swPath = path.join(__dirname, '..', 'public', 'sw.js');
+
+const content = `// Service Worker for PWA
+const CACHE_VERSION = '${version}';
 const CACHE_NAME = `loan-manager-cache-${CACHE_VERSION}`;
 const urlsToCache = [
   '/',
@@ -96,4 +102,7 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(request))
   );
 });
+`;
 
+fs.writeFileSync(swPath, content, 'utf8');
+console.log(`Generated ${swPath} with version ${version}`);
