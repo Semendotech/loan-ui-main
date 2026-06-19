@@ -34,7 +34,7 @@ export default function Footer() {
         
         <div className="border-t border-green-600 mt-8 pt-6 text-center text-green-100">
           <p>© {new Date().getFullYear()} Loan Management System. All rights reserved.</p>
-          <p className="mt-2 text-sm text-green-200">Powered by Loan Manager — professional loan records and printable client statements.</p>
+          <p className="mt-2 text-sm text-green-200">Powered by Infinite Digital Solutions KE</p>
         </div>
       </div>
     </footer>
