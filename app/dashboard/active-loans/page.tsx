@@ -187,16 +187,16 @@ export default function ActiveLoansPage() {
 					<table className="min-w-[1100px] table-auto divide-y divide-gray-200">
 						<thead className="bg-gray-50">
 							<tr>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan #</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Amount</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Interest Rate</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Remaining</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Guarantor</th>
-								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Timeline</th>
-								<th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan #</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Amount</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Interest Rate</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Remaining</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Guarantor</th>
+								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Timeline</th>
+								<th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-100">
@@ -210,45 +210,45 @@ export default function ActiveLoansPage() {
 								displayLoans.map((loan, idx) => (
 									<Fragment key={loan.id ?? idx}>
 										<tr className="hover:bg-gray-50">
-											<td className="px-4 py-3 text-sm font-medium text-gray-900">{loan.id ?? "…"}</td>
-											<td className="px-4 py-3 text-sm">
+											<td className="px-4 py-2 text-sm font-medium text-gray-900">{loan.id ?? "…"}</td>
+											<td className="px-4 py-2 text-sm">
 												<span className={`text-xs px-2 py-1 rounded-full font-medium ${statusBadgeClass(loan.status ?? "")}`}>
 													{loan.status ?? "…"}
 												</span>
 											</td>
-											<td className="px-4 py-3 text-sm text-gray-800">
+											<td className="px-4 py-2 text-sm text-gray-800">
 												{loan.amount != null ? formatKesCurrency(loan.amount) : "…"}
 											</td>
-											<td className="px-4 py-3 text-sm text-gray-800">
+											<td className="px-4 py-2 text-sm text-gray-800">
 												{loan.interest_rate != null ? `${loan.interest_rate}%` : "…"}
 											</td>
-											<td className="px-4 py-3 text-sm font-semibold text-green-700">
+											<td className="px-4 py-2 text-sm font-semibold text-green-700">
 												{loan.amount != null && loan.interest_rate != null
 													? formatKesCurrency(getDailyInstalment(loan))
 													: "…"}
 											</td>
-											<td className="px-4 py-3 text-sm text-gray-800">
+											<td className="px-4 py-2 text-sm text-gray-800">
 												{loan.remaining_amount != null ? formatKesCurrency(loan.remaining_amount) : "…"}
 											</td>
-											<td className="px-4 py-3 text-sm text-gray-800">
+											<td className="px-4 py-2 text-sm text-gray-800 leading-tight">
 												<div className="font-medium">{loan.customer?.name ?? "Unknown"}</div>
-												<div className="text-xs text-gray-500">{loan.customer?.id_number ?? "…"}</div>
+												<div className="text-xs text-gray-500 mt-0.5">{loan.customer?.id_number ?? "…"}</div>
 											</td>
-											<td className="px-4 py-3 text-sm text-gray-800">
+											<td className="px-4 py-2 text-sm text-gray-800 leading-tight">
 												{loan.guarantor ? (
 													<>
 														<div className="font-medium">{loan.guarantor.name}</div>
-														<div className="text-xs text-gray-500">{loan.guarantor.relationship || "-"}</div>
+														<div className="text-xs text-gray-500 mt-0.5">{loan.guarantor.relationship || "-"}</div>
 													</>
 												) : (
 													<span className="text-gray-400">—</span>
 												)}
 											</td>
-											<td className="px-4 py-3 text-sm text-gray-600">
+											<td className="px-4 py-2 text-sm text-gray-600 leading-tight">
 												<div>Start: {loan.start_date ?? "…"}</div>
-												<div>Due: {loan.due_date ?? "…"}</div>
+												<div className="mt-0.5">Due: {loan.due_date ?? "…"}</div>
 											</td>
-											<td className="px-4 py-3 text-sm text-right whitespace-nowrap">
+											<td className="px-4 py-2 text-sm text-right whitespace-nowrap">
 												{loan.id ? (
 													<div className="flex justify-end gap-2">
 														<button
