@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Home, PlusCircle, CreditCard, Users, CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
+import { Menu, X, Home, PlusCircle, CreditCard, Users, CheckCircle2, AlertTriangle, AlertCircle, FileText } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -78,6 +78,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <NavLink href="/dashboard/overdue" active={pathname?.startsWith("/dashboard/overdue") ?? false}>
                   <CreditCard className="w-5 h-5" />
                   <span>Clear Overdue</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink href="/dashboard/loan-statement" active={pathname?.startsWith("/dashboard/loan-statement") ?? false}>
+                  <FileText className="w-5 h-5" />
+                  <span>Loan Statement</span>
                 </NavLink>
               </li>
               <li>
