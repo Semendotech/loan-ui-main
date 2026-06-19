@@ -6,7 +6,7 @@ const swPath = path.join(__dirname, '..', 'public', 'sw.js');
 
 const content = `// Service Worker for PWA
 const CACHE_VERSION = '${version}';
-const CACHE_NAME = `loan-manager-cache-${CACHE_VERSION}`;
+const CACHE_NAME = 'loan-manager-cache-' + CACHE_VERSION;
 const urlsToCache = [
   '/',
   '/dashboard',
