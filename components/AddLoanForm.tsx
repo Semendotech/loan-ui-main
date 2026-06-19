@@ -60,13 +60,14 @@ export default function AddLoanForm() {
   const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [customerExists, setCustomerExists] = useState(false);
 
-  const customerIdLength = customerIdType === "id_card" ? 8 : customerIdType === "maisha_card" ? 9 : 0;
-  const isSearchEnabled = customerIdType !== null && customerIdNumber.length === customerIdLength;
-  const idNumberPlaceholder = customerIdType === "id_card"
-    ? "Enter 8-digit ID number"
-    : customerIdType === "maisha_card"
-    ? "Enter 9-digit Maisha number"
-    : "Select ID type first";
+  const customerIdMinLength = customerIdType === "id_card" ? 7 : customerIdType === "maisha_card" ? 8 : 0;
+  const customerIdMaxLength = customerIdType === "id_card" ? 8 : customerIdType === "maisha_card" ? 9 : 0;
+  const isSearchEnabled =
+    customerIdType !== null &&
+    customerIdNumber.length >= customerIdMinLength &&
+    customerIdNumber.length <= customerIdMaxLength &&
+    !customerIdNumber.startsWith("0");
+  const idNumberPlaceholder = "Enter ID number";
 
   const handleCustomerIdTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as CustomerIdType | "";
@@ -77,7 +78,7 @@ export default function AddLoanForm() {
 
   const handleCustomerIdNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const numericValue = e.target.value.replace(/\D/g, "");
-    setCustomerIdNumber(numericValue.slice(0, customerIdLength || numericValue.length));
+    setCustomerIdNumber(numericValue.slice(0, customerIdMaxLength || numericValue.length));
     if (customerIdError) {
       setCustomerIdError("");
     }
@@ -175,12 +176,16 @@ export default function AddLoanForm() {
 
   const handleLookup = async () => {
     if (!customerIdType) {
-      setCustomerIdError("Select an ID Type");
+      setCustomerIdError("Enter correct ID number");
       return;
     }
 
-    if (customerIdNumber.length !== customerIdLength) {
-      setCustomerIdError(`Enter a valid ${customerIdLength}-digit ID number`);
+    if (
+      customerIdNumber.length < customerIdMinLength ||
+      customerIdNumber.length > customerIdMaxLength ||
+      customerIdNumber.startsWith("0")
+    ) {
+      setCustomerIdError("Enter correct ID number");
       return;
     }
 
@@ -455,6 +460,7 @@ export default function AddLoanForm() {
                   value={customerIdNumber}
                   onChange={handleCustomerIdNumberChange}
                   disabled={!customerIdType}
+                  maxLength={customerIdMaxLength || undefined}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black focus:ring-4 focus:ring-green-200 focus:border-green-500 shadow-sm"
                   placeholder={idNumberPlaceholder}
                 />
