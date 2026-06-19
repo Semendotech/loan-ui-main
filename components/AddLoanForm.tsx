@@ -42,6 +42,8 @@ interface CustomerCheckResponse {
   customer: (Customer & { id: number; }) | null;
 }
 
+type CustomerIdType = "id_card" | "maisha_card";
+
 interface CreatedLoanResponse {
   id: number;
   document_url?: string;
@@ -53,8 +55,33 @@ export default function AddLoanForm() {
   const router = useRouter();
 
   const [customerIdNumber, setCustomerIdNumber] = useState("");
+  const [customerIdType, setCustomerIdType] = useState<CustomerIdType | null>(null);
+  const [customerIdError, setCustomerIdError] = useState("");
   const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [customerExists, setCustomerExists] = useState(false);
+
+  const customerIdLength = customerIdType === "id_card" ? 8 : customerIdType === "maisha_card" ? 9 : 0;
+  const isSearchEnabled = customerIdType !== null && customerIdNumber.length === customerIdLength;
+  const idNumberPlaceholder = customerIdType === "id_card"
+    ? "Enter 8-digit ID number"
+    : customerIdType === "maisha_card"
+    ? "Enter 9-digit Maisha number"
+    : "Select ID type first";
+
+  const handleCustomerIdTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as CustomerIdType | "";
+    setCustomerIdType(value === "" ? null : value);
+    setCustomerIdNumber("");
+    setCustomerIdError("");
+  };
+
+  const handleCustomerIdNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numericValue = e.target.value.replace(/\D/g, "");
+    setCustomerIdNumber(numericValue.slice(0, customerIdLength || numericValue.length));
+    if (customerIdError) {
+      setCustomerIdError("");
+    }
+  };
 
   const [customerForm, setCustomerForm] = useState<Customer>({
     name: "",
@@ -147,15 +174,17 @@ export default function AddLoanForm() {
   }, [isAuthenticated, loading, router]);
 
   const handleLookup = async () => {
-    const lookupIdError = validateIdNumber(customerIdNumber);
-    if (lookupIdError) {
-      toast.error(lookupIdError);
+    if (!customerIdType) {
+      setCustomerIdError("Select an ID Type");
       return;
     }
-    if (!customerIdNumber) {
-      toast.error("Please enter ID Number");
+
+    if (customerIdNumber.length !== customerIdLength) {
+      setCustomerIdError(`Enter a valid ${customerIdLength}-digit ID number`);
       return;
     }
+
+    setCustomerIdError("");
     setLookupStatus("loading");
     try {
       const data = await api.post<CustomerCheckResponse>("/customers/check", { id_number: customerIdNumber });
@@ -222,7 +251,8 @@ export default function AddLoanForm() {
 
   const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setCustomerForm((prev) => ({ ...prev, [name]: value }));
+    const inputValue = name === "phone" ? value.replace(/\D/g, "").slice(0, 10) : value;
+    setCustomerForm((prev) => ({ ...prev, [name]: inputValue }));
     if (!customerExists) {
       setCustomerFieldErrors((prev) => ({ ...prev, [name]: "" }));
     }
@@ -402,10 +432,44 @@ export default function AddLoanForm() {
         <h2 className="text-xl font-semibold mb-4">Customer Lookup</h2>
         <div className="flex items-end gap-4">
           <div className="w-full md:w-1/2">
-            <label htmlFor="customerIdNumber" className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
-            <input type="text" id="customerIdNumber" value={customerIdNumber} onChange={(e) => setCustomerIdNumber(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black focus:ring-4 focus:ring-green-200 focus:border-green-500 shadow-sm" placeholder="Enter ID number" />
+            <div className="grid gap-4">
+              <div>
+                <label htmlFor="customerIdType" className="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
+                <select
+                  id="customerIdType"
+                  value={customerIdType ?? ""}
+                  onChange={handleCustomerIdTypeChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black focus:ring-4 focus:ring-green-200 focus:border-green-500 shadow-sm"
+                  required
+                >
+                  <option value="">Select ID type</option>
+                  <option value="id_card">National ID Card</option>
+                  <option value="maisha_card">Maisha Card</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="customerIdNumber" className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+                <input
+                  type="text"
+                  id="customerIdNumber"
+                  value={customerIdNumber}
+                  onChange={handleCustomerIdNumberChange}
+                  disabled={!customerIdType}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-black focus:ring-4 focus:ring-green-200 focus:border-green-500 shadow-sm"
+                  placeholder={idNumberPlaceholder}
+                />
+                {customerIdError && (
+                  <p className="text-sm text-red-600 mt-1">{customerIdError}</p>
+                )}
+              </div>
+            </div>
           </div>
-          <button type="button" onClick={handleLookup} disabled={lookupStatus === "loading"} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50">
+          <button
+            type="button"
+            onClick={handleLookup}
+            disabled={lookupStatus === "loading" || !isSearchEnabled}
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50"
+          >
             {lookupStatus === "loading" ? "Searching..." : "Search"}
           </button>
         </div>
