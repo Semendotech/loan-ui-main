@@ -25,6 +25,7 @@ interface SummaryMetrics {
   completed_loans_amount_this_month: number;
   active_loans_count_this_month: number;
   interest_last_three_months: number;
+  total_customers?: number;
   overdue_count_last_three_months?: number;
   arrears_count_last_three_months?: number;
   total_paid_today?: number;
@@ -152,7 +153,7 @@ export default function DashboardOverviewPage() {
               <StatCard label="Completed Loans (This Month)" prefix="KSh " value={summary.completed_loans_amount_this_month} color="text-emerald-700" accent="bg-emerald-50" />
               <StatCard label="Active Loans (Started This Month)" value={summary.active_loans_count_this_month} color="text-blue-700" accent="bg-blue-50" />
               <StatCard label="Interest (Completed, Last 3 Months)" prefix="KSh " value={summary.interest_last_three_months} color="text-indigo-700" accent="bg-indigo-50" />
-              <StatCard label="Overdue (Last 3 Months)" value={overdueSummaryCount} color="text-rose-700" accent="bg-rose-50" />
+              <StatCard label="Total Customers" value={summary.total_customers ?? 0} color="text-slate-700" accent="bg-slate-50" />
               <div className="p-4 rounded-lg border shadow-sm bg-slate-50 md:col-span-2">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>

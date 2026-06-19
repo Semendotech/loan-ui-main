@@ -201,44 +201,44 @@ function OverdueManager() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Active Overdues</p>
-              <p className="text-3xl font-bold text-red-600 mt-2">
+              <p className="text-xl font-bold text-red-600 mt-2">
                 {summary.activeCount}
               </p>
             </div>
-            <div className="p-3 bg-red-50 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-red-600" />
+            <div className="p-1 bg-red-50 rounded-lg">
+              <TrendingDown className="w-4 h-4 text-red-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Cleared Overdues</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">
+              <p className="text-xl font-bold text-green-600 mt-2">
                 {summary.clearedCount}
               </p>
             </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
+            <div className="p-1 bg-green-50 rounded-lg">
+              <CheckCircle className="w-4 h-4 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition">
+        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-600 text-sm font-medium">Outstanding Amount</p>
-              <p className="text-3xl font-bold text-blue-600 mt-2">
+              <p className="text-xl font-bold text-blue-600 mt-2">
                 {formatKesCurrency(summary.totalOutstanding)}
               </p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <AlertTriangle className="w-6 h-6 text-blue-600" />
+            <div className="p-1 bg-blue-50 rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-blue-600" />
             </div>
           </div>
         </div>
@@ -263,114 +263,113 @@ function OverdueManager() {
           <div className="overflow-x-auto">
             <div className="divide-y divide-gray-100">
               {/* Table Header */}
-              <div className="grid grid-cols-1 lg:grid-cols-6 gap-4 px-6 py-4 bg-gray-50 font-semibold text-gray-700 text-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 px-6 py-4 bg-gray-50 font-semibold text-gray-700 text-sm">
                 <div>Customer</div>
-                <div>ID Number</div>
+                <div>Phone Number</div>
                 <div>Outstanding</div>
                 <div>Days Overdue</div>
-                <div>Status</div>
                 <div>Action</div>
               </div>
 
               {/* Table Rows */}
               <div className="divide-y divide-gray-100">
-                {overdue.map((a) => (
-                  <div key={a.id} className="grid grid-cols-1 lg:grid-cols-6 gap-4 px-6 py-6 hover:bg-gray-50 transition">
-                    {/* Customer */}
-                    <div>
-                      <p className="font-semibold text-gray-900">{a.customer_name || "—"}</p>
-                      <p className="text-sm text-gray-600 mt-1">Loan #{a.loan_id}</p>
-                    </div>
+                {overdue.map((a) => {
+                  const overdueDays = a.arrears_date
+                    ? Math.floor(
+                        (new Date().getTime() - new Date(a.arrears_date).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      )
+                    : 0;
+                  const overdueRowClass =
+                    overdueDays >= 30
+                      ? "bg-red-100 border-l-4 border-red-500"
+                      : overdueDays >= 14
+                      ? "bg-red-50 border-l-4 border-orange-400"
+                      : "bg-white";
+                  const amountTextClass = overdueDays >= 30 ? "text-red-700" : "text-red-600";
 
-                    {/* ID Number */}
-                    <div>
-                      <p className="text-gray-900 font-medium">{a.customer_id || "—"}</p>
-                      <p className="text-sm text-gray-500 mt-1">Arrears #{a.id}</p>
-                    </div>
-
-                    {/* Outstanding */}
-                    <div>
-                      <p className="text-lg font-bold text-red-600">
-                        {formatKesCurrency(a.remaining_amount || 0)}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Original: {formatKesCurrency(a.original_amount || 0)}
-                      </p>
-                    </div>
-
-                    {/* Days Overdue */}
-                    <div>
-                      {a.arrears_date && (
-                        <>
-                          <p className="text-gray-900 font-medium">
-                            {Math.floor(
-                              (new Date().getTime() - new Date(a.arrears_date).getTime()) /
-                                (1000 * 60 * 60 * 24)
-                            )}{" "}
-                            days
-                          </p>
-                          <p className="text-sm text-gray-600 mt-1">{a.arrears_date}</p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Status */}
-                    <div>
-                      <span
-                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                          a.is_cleared
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {a.is_cleared ? "✓ Cleared" : "⚠ Active"}
-                      </span>
-                    </div>
-
-                    {/* Action */}
-                    {!a.is_cleared && (
+                  return (
+                    <div
+                      key={a.id}
+                      className={`grid grid-cols-1 lg:grid-cols-5 gap-4 px-6 py-6 hover:bg-gray-50 transition ${overdueRowClass}`}
+                    >
+                      {/* Customer */}
                       <div>
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              placeholder="Amount"
-                              value={amounts[a.id] || ""}
-                              onChange={(e) =>
-                                setAmounts((s) => ({
-                                  ...s,
-                                  [a.id]: e.target.value,
-                                }))
-                              }
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                            />
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => pay(a.id)}
-                              disabled={processingId === a.id}
-                              className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
-                            >
-                              {processingId === a.id ? "..." : "Pay"}
-                            </button>
-                            <button
-                              onClick={() => clear(a.id)}
-                              disabled={processingId === a.id}
-                              className="flex-1 px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50"
-                            >
-                              {processingId === a.id ? "..." : "Clear"}
-                            </button>
-                          </div>
-                        </div>
+                        <p className="font-semibold text-gray-900">{a.customer_name || "—"}</p>
+                        <p className="text-sm text-gray-600 mt-1">Loan #{a.loan_id}</p>
                       </div>
-                    )}
-                    {a.is_cleared && (
-                      <div className="flex items-center">
-                        <p className="text-sm text-gray-500">No action needed</p>
+
+                      {/* Phone Number */}
+                      <div>
+                        <p className="text-gray-900 font-medium">{a.customer_phone || "—"}</p>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* Outstanding */}
+                      <div>
+                        <p className={`text-lg font-bold ${amountTextClass}`}>
+                          {formatKesCurrency(a.remaining_amount || 0)}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Original: {formatKesCurrency(a.original_amount || 0)}
+                        </p>
+                      </div>
+
+                      {/* Days Overdue */}
+                      <div>
+                        {a.arrears_date && (
+                          <>
+                            <p className="text-gray-900 font-medium">
+                              {overdueDays} days
+                            </p>
+                            <p className="text-sm text-gray-600 mt-1">{a.arrears_date}</p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Action */}
+                      <div>
+                        {!a.is_cleared ? (
+                          <div className="space-y-2">
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                placeholder="Amount"
+                                value={amounts[a.id] || ""}
+                                onChange={(e) =>
+                                  setAmounts((s) => ({
+                                    ...s,
+                                    [a.id]: e.target.value,
+                                  }))
+                                }
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => pay(a.id)}
+                                disabled={processingId === a.id}
+                                className="flex-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition disabled:opacity-50"
+                              >
+                                {processingId === a.id ? "..." : "Pay"}
+                              </button>
+                              <button
+                                onClick={() => clear(a.id)}
+                                disabled={processingId === a.id}
+                                className="flex-1 px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50"
+                              >
+                                {processingId === a.id ? "..." : "Clear"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <p className="text-sm text-gray-500">No action needed</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

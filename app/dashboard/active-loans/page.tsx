@@ -26,13 +26,6 @@ function getDailyInstalment(loan: LoanItem): number {
 	return calculateDailyInstalment(loan.amount, loan.interest_rate);
 }
 
-function statusBadgeClass(status: string): string {
-	const normalized = status.toUpperCase();
-	if (normalized === "ACTIVE") return "bg-green-100 text-green-700";
-	if (normalized === "ARREARS") return "bg-amber-100 text-amber-800";
-	return "bg-gray-100 text-gray-700";
-}
-
 export default function ActiveLoansPage() {
 	const [loans, setLoans] = useState<LoanItem[]>([]);
 	const [q, setQ] = useState("");
@@ -42,11 +35,6 @@ export default function ActiveLoansPage() {
 	const [editRate, setEditRate] = useState<string>("");
 	const [editStartDate, setEditStartDate] = useState<string>("");
 	const [editDueDate, setEditDueDate] = useState<string>("");
-	const [editGuarantorName, setEditGuarantorName] = useState<string>("");
-	const [editGuarantorId, setEditGuarantorId] = useState<string>("");
-	const [editGuarantorPhone, setEditGuarantorPhone] = useState<string>("");
-	const [editGuarantorLocation, setEditGuarantorLocation] = useState<string>("");
-	const [editGuarantorRelationship, setEditGuarantorRelationship] = useState<string>("");
 	const [saving, setSaving] = useState(false);
 
 	const load = async () => {
@@ -73,19 +61,6 @@ export default function ActiveLoansPage() {
 		const dueDate = loan.due_date ? (loan.due_date.includes("T") ? loan.due_date.split("T")[0] : loan.due_date) : "";
 		setEditStartDate(startDate);
 		setEditDueDate(dueDate);
-		if (loan.guarantor) {
-			setEditGuarantorName(loan.guarantor.name ?? "");
-			setEditGuarantorId(loan.guarantor.id_number ?? "");
-			setEditGuarantorPhone(loan.guarantor.phone ?? "");
-			setEditGuarantorLocation(loan.guarantor.location ?? "");
-			setEditGuarantorRelationship(loan.guarantor.relationship ?? "");
-		} else {
-			setEditGuarantorName("");
-			setEditGuarantorId("");
-			setEditGuarantorPhone("");
-			setEditGuarantorLocation("");
-			setEditGuarantorRelationship("");
-		}
 	};
 
 	const cancelEdit = () => {
@@ -94,11 +69,6 @@ export default function ActiveLoansPage() {
 		setEditRate("");
 		setEditStartDate("");
 		setEditDueDate("");
-		setEditGuarantorName("");
-		setEditGuarantorId("");
-		setEditGuarantorPhone("");
-		setEditGuarantorLocation("");
-		setEditGuarantorRelationship("");
 	};
 
 	const saveEdit = async (loan: LoanItem) => {
@@ -138,20 +108,6 @@ export default function ActiveLoansPage() {
 				await api.patch(`/loans/${loan.id}`, loanPayload);
 			}
 
-			if (loan.guarantor) {
-				const guarantorPayload: Record<string, string> = {};
-
-				if (editGuarantorName.trim()) guarantorPayload.name = editGuarantorName.trim();
-				if (editGuarantorId.trim()) guarantorPayload.id_number = editGuarantorId.trim();
-				if (editGuarantorPhone.trim()) guarantorPayload.phone = editGuarantorPhone.trim();
-				if (editGuarantorLocation.trim()) guarantorPayload.location = editGuarantorLocation.trim();
-				if (editGuarantorRelationship.trim()) guarantorPayload.relationship = editGuarantorRelationship.trim();
-
-				if (Object.keys(guarantorPayload).length > 0) {
-					await api.patch(`/loans/${loan.id}/guarantor/${loan.guarantor.id}`, guarantorPayload);
-				}
-			}
-
 			await load();
 			cancelEdit();
 		} catch (e: any) {
@@ -188,13 +144,11 @@ export default function ActiveLoansPage() {
 						<thead className="bg-gray-50">
 							<tr>
 								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan #</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Status</th>
 								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Amount</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Interest Rate</th>
 								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
 								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Remaining</th>
 								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Guarantor</th>
+
 								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Timeline</th>
 								<th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
 							</tr>
@@ -202,7 +156,7 @@ export default function ActiveLoansPage() {
 						<tbody className="divide-y divide-gray-100">
 							{!loading && loans.length === 0 ? (
 								<tr>
-									<td colSpan={10} className="px-4 py-10 text-center text-gray-500">
+									<td colSpan={7} className="px-4 py-10 text-center text-gray-500">
 										No active loans found.
 									</td>
 								</tr>
@@ -211,39 +165,21 @@ export default function ActiveLoansPage() {
 									<Fragment key={loan.id ?? idx}>
 										<tr className="hover:bg-gray-50">
 											<td className="px-4 py-2 text-sm font-medium text-gray-900">{loan.id ?? "…"}</td>
-											<td className="px-4 py-2 text-sm">
-												<span className={`text-xs px-2 py-1 rounded-full font-medium ${statusBadgeClass(loan.status ?? "")}`}>
-													{loan.status ?? "…"}
-												</span>
-											</td>
-											<td className="px-4 py-2 text-sm text-gray-800">
-												{loan.amount != null ? formatKesCurrency(loan.amount) : "…"}
-											</td>
-											<td className="px-4 py-2 text-sm text-gray-800">
-												{loan.interest_rate != null ? `${loan.interest_rate}%` : "…"}
-											</td>
-											<td className="px-4 py-2 text-sm font-semibold text-green-700">
-												{loan.amount != null && loan.interest_rate != null
-													? formatKesCurrency(getDailyInstalment(loan))
-													: "…"}
-											</td>
-											<td className="px-4 py-2 text-sm text-gray-800">
-												{loan.remaining_amount != null ? formatKesCurrency(loan.remaining_amount) : "…"}
-											</td>
-											<td className="px-4 py-2 text-sm text-gray-800 leading-tight">
-												<div className="font-medium">{loan.customer?.name ?? "Unknown"}</div>
-												<div className="text-xs text-gray-500 mt-0.5">{loan.customer?.id_number ?? "…"}</div>
-											</td>
-											<td className="px-4 py-2 text-sm text-gray-800 leading-tight">
-												{loan.guarantor ? (
-													<>
-														<div className="font-medium">{loan.guarantor.name}</div>
-														<div className="text-xs text-gray-500 mt-0.5">{loan.guarantor.relationship || "-"}</div>
-													</>
-												) : (
-													<span className="text-gray-400">—</span>
-												)}
-											</td>
+                                            <td className="px-4 py-2 text-sm text-gray-800">
+                                                {loan.amount != null ? formatKesCurrency(loan.amount) : "…"}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm font-semibold text-green-700">
+                                                {loan.amount != null && loan.interest_rate != null
+                                                    ? formatKesCurrency(getDailyInstalment(loan))
+                                                    : "…"}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-800">
+                                                {loan.remaining_amount != null ? formatKesCurrency(loan.remaining_amount) : "…"}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-800 leading-tight">
+                                                <div className="font-medium">{loan.customer?.name ?? "Unknown"}</div>
+                                                <div className="text-xs text-gray-500 mt-0.5">{loan.customer?.id_number ?? "…"}</div>
+                                            </td>
 											<td className="px-4 py-2 text-sm text-gray-600 leading-tight">
 												<div>Start: {loan.start_date ?? "…"}</div>
 												<div className="mt-0.5">Due: {loan.due_date ?? "…"}</div>
@@ -271,7 +207,7 @@ export default function ActiveLoansPage() {
 										</tr>
 										{editingId === loan.id && (
 											<tr className="bg-gray-50">
-												<td colSpan={10} className="px-4 py-4">
+												<td colSpan={7} className="px-4 py-4">
 													<div className="space-y-3 border rounded-lg p-4 bg-white">
 														<div className="text-xs font-semibold text-gray-700 mb-2">Loan Details</div>
 														<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -317,58 +253,7 @@ export default function ActiveLoansPage() {
 															</div>
 														</div>
 
-														{loan.guarantor && (
-															<>
-																<div className="text-xs font-semibold text-gray-700 mt-3 mb-2">Guarantor Details</div>
-																<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-																	<div className="flex flex-col gap-1">
-																		<label className="text-xs text-gray-600">Name</label>
-																		<input
-																			type="text"
-																			value={editGuarantorName}
-																			onChange={(e) => setEditGuarantorName(e.target.value)}
-																			className="px-2 py-1.5 border rounded text-sm"
-																		/>
-																	</div>
-																	<div className="flex flex-col gap-1">
-																		<label className="text-xs text-gray-600">ID Number</label>
-																		<input
-																			type="text"
-																			value={editGuarantorId}
-																			onChange={(e) => setEditGuarantorId(e.target.value)}
-																			className="px-2 py-1.5 border rounded text-sm"
-																		/>
-																	</div>
-																	<div className="flex flex-col gap-1">
-																		<label className="text-xs text-gray-600">Phone</label>
-																		<input
-																			type="text"
-																			value={editGuarantorPhone}
-																			onChange={(e) => setEditGuarantorPhone(e.target.value)}
-																			className="px-2 py-1.5 border rounded text-sm"
-																		/>
-																	</div>
-																	<div className="flex flex-col gap-1">
-																		<label className="text-xs text-gray-600">Location</label>
-																		<input
-																			type="text"
-																			value={editGuarantorLocation}
-																			onChange={(e) => setEditGuarantorLocation(e.target.value)}
-																			className="px-2 py-1.5 border rounded text-sm"
-																		/>
-																	</div>
-																	<div className="flex flex-col gap-1 sm:col-span-2">
-																		<label className="text-xs text-gray-600">Relationship</label>
-																		<input
-																			type="text"
-																			value={editGuarantorRelationship}
-																			onChange={(e) => setEditGuarantorRelationship(e.target.value)}
-																			className="px-2 py-1.5 border rounded text-sm"
-																		/>
-																	</div>
-																</div>
-															</>
-														)}
+
 
 														<div className="flex justify-end gap-2 mt-3">
 															<button onClick={cancelEdit} className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50">

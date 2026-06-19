@@ -1,9 +1,11 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Turbopack is the default in Next.js 16; no custom webpack needed
-  turbopack: {},
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

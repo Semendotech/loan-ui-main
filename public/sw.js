@@ -1,6 +1,6 @@
 // Service Worker for PWA
-const CACHE_VERSION = 'loan-manager-cache-v1';
-const CACHE_NAME = `loan-manager-cache-${CACHE_VERSION}`;
+const CACHE_VERSION = 'loan-manager-cache-v2026-06-19T11-50-22-234Z';
+const CACHE_NAME = 'loan-manager-cache-' + CACHE_VERSION;
 const urlsToCache = [
   '/',
   '/dashboard',
@@ -96,4 +96,3 @@ self.addEventListener('fetch', (event) => {
       .catch(() => caches.match(request))
   );
 });
-

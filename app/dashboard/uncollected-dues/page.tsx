@@ -20,13 +20,11 @@ export default function UncollectedDuesPage() {
   const [dues, setDues] = useState<UncollectedDueItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
-    params.set("start_date", startDate);
-    params.set("end_date", endDate);
+    params.set("date", selectedDate);
     return `?${params.toString()}`;
   };
 
@@ -47,7 +45,7 @@ export default function UncollectedDuesPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [selectedDate]);
 
   const handleDownloadReport = async () => {
     try {
@@ -59,8 +57,7 @@ export default function UncollectedDuesPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const suffix = startDate === endDate ? startDate : `${startDate}_${endDate}`;
-      a.download = `uncollected_dues_report_${suffix}.pdf`;
+      a.download = `uncollected_dues_report_${selectedDate}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -90,32 +87,31 @@ export default function UncollectedDuesPage() {
             Active loans where today's instalment payment has not been received
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md text-sm"
-            />
+        <div className="grid gap-4 sm:grid-cols-[1fr_auto] items-end w-full">
+          <div className="bg-white p-4 rounded shadow-sm">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="text-sm text-gray-600">Uncollected dues report</div>
+                <div className="text-base font-semibold text-gray-900 mt-1">View uncollected dues as of a specific day</div>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="px-3 py-2 border rounded text-sm"
+                />
+                <button
+                  onClick={handleDownloadReport}
+                  disabled={downloading}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 transition"
+                >
+                  <Download className="w-4 h-4" />
+                  {downloading ? "Generating…" : "Print PDF"}
+                </button>
+              </div>
+            </div>
           </div>
-          <button onClick={load} className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
-            Refresh
-          </button>
-          <button
-            onClick={handleDownloadReport}
-            disabled={downloading}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-md disabled:opacity-60"
-          >
-            <Download className="w-4 h-4" />
-            {downloading ? "Generating…" : "Print PDF"}
-          </button>
         </div>
       </div>
 
