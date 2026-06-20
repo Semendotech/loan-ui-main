@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAdmin = !!user && user.role === 'admin';
 
   useEffect(() => {
     // close sidebar after navigation on small screens
@@ -45,15 +46,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </NavLink>
               </li>
               <li>
+                <NavLink href="/dashboard/pay-installments" active={pathname?.startsWith("/dashboard/pay-installments") ?? false}>
+                  <CreditCard className="w-5 h-5" />
+                  <span>Pay Installments</span>
+                </NavLink>
+              </li>
+              <li>
                 <NavLink href="/dashboard/active-loans" active={pathname?.startsWith("/dashboard/active-loans") ?? false}>
                   <CreditCard className="w-5 h-5" />
                   <span>Active Loans</span>
                 </NavLink>
               </li>
               <li>
-                <NavLink href="/dashboard/cleared-loans" active={pathname?.startsWith("/dashboard/cleared-loans") ?? false}>
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span>Cleared Loans</span>
+                <NavLink href="/dashboard/overdue" active={pathname?.startsWith("/dashboard/overdue") ?? false}>
+                  <CreditCard className="w-5 h-5" />
+                  <span>Clear Overdue</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink href="/dashboard/customers" active={pathname?.startsWith("/dashboard/customers") ?? false}>
+                  <Users className="w-5 h-5" />
+                  <span>Manage Customers</span>
                 </NavLink>
               </li>
               <li>
@@ -69,15 +82,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </NavLink>
               </li>
               <li>
-                <NavLink href="/dashboard/pay-installments" active={pathname?.startsWith("/dashboard/pay-installments") ?? false}>
-                  <CreditCard className="w-5 h-5" />
-                  <span>Pay Installments</span>
-                </NavLink>
-              </li>
-              <li>
-                <NavLink href="/dashboard/overdue" active={pathname?.startsWith("/dashboard/overdue") ?? false}>
-                  <CreditCard className="w-5 h-5" />
-                  <span>Clear Overdue</span>
+                <NavLink href="/dashboard/cleared-loans" active={pathname?.startsWith("/dashboard/cleared-loans") ?? false}>
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>Cleared Loans</span>
                 </NavLink>
               </li>
               <li>
@@ -86,13 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span>Loan Statement</span>
                 </NavLink>
               </li>
-              <li>
-                <NavLink href="/dashboard/customers" active={pathname?.startsWith("/dashboard/customers") ?? false}>
-                  <Users className="w-5 h-5" />
-                  <span>Manage Customers</span>
-                </NavLink>
-              </li>
-              {user?.role === 'admin' && (
+              {isAdmin && (
                 <li>
                   <NavLink href="/dashboard/manage-staff" active={pathname?.startsWith("/dashboard/manage-staff") ?? false}>
                     <Users className="w-5 h-5" />
