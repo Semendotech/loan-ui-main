@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, Home, PlusCircle, CreditCard, Users, CheckCircle2, AlertTriangle, AlertCircle, FileText } from "lucide-react";
@@ -10,11 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    // close sidebar after navigation on small screens
-    setSidebarOpen(false);
-  }, [pathname]);
+  const isAdmin = String(user?.role ?? "").toLowerCase() === "admin";
 
   return (
     <div className="min-h-[80vh] md:min-h-[70vh] flex bg-gray-100">
@@ -31,7 +27,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="px-4 py-6 flex-1 overflow-y-auto">
-            <>{console.log("user role:", user?.role)}</>
             <ul className="space-y-2">
               <li>
                 <NavLink href="/dashboard" active={pathname === "/dashboard"}>
@@ -93,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span>Loan Statement</span>
                 </NavLink>
               </li>
-              {user && user.role?.toLowerCase() === 'admin' && (
+              {isAdmin && (
                 <li>
                   <NavLink href="/dashboard/manage-staff" active={pathname?.startsWith("/dashboard/manage-staff") ?? false}>
                     <Users className="w-5 h-5" />

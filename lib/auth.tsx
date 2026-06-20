@@ -40,7 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: "include",
       });
       if (res.ok) {
-        setUser(await res.json());
+        const data = await res.json();
+        if (data?.role && typeof data.role !== "string") {
+          data.role = String(data.role);
+        }
+        setUser(data);
       } else {
         setUser(null);
       }

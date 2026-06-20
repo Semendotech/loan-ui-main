@@ -7,6 +7,7 @@ import { useState } from "react";
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isAdmin = String(user?.role ?? "").toLowerCase() === "admin";
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -47,7 +48,7 @@ export default function Navbar() {
               <>
                 <Link href="/dashboard" className="hover:text-green-600 transition-colors">Dashboard</Link>
                 <Link href="/changepassword" className="hover:text-green-600 transition-colors">Change Password</Link>
-                {user?.role === 'admin' && (
+                {isAdmin && (
                   <Link href="/dashboard/manage-staff" className="hover:text-green-600 transition-colors">Manage Staff</Link>
                 )}
               </>
@@ -82,7 +83,7 @@ export default function Navbar() {
                 <>
                   <Link href="/dashboard" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Dashboard</Link>
                   <Link href="/changepassword" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Change Password</Link>
-                  {user?.role === 'admin' && (
+                  {isAdmin && (
                     <Link href="/dashboard/manage-staff" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Manage Staff</Link>
                   )}
                 </>
