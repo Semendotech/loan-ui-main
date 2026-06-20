@@ -10,7 +10,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isAdmin = !!user && user.role === 'admin';
 
   useEffect(() => {
     // close sidebar after navigation on small screens
@@ -32,6 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="px-4 py-6 flex-1 overflow-y-auto">
+            <>{console.log("user role:", user?.role)}</>
             <ul className="space-y-2">
               <li>
                 <NavLink href="/dashboard" active={pathname === "/dashboard"}>
@@ -93,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span>Loan Statement</span>
                 </NavLink>
               </li>
-              {isAdmin && (
+              {user && user.role?.toLowerCase() === 'admin' && (
                 <li>
                   <NavLink href="/dashboard/manage-staff" active={pathname?.startsWith("/dashboard/manage-staff") ?? false}>
                     <Users className="w-5 h-5" />
