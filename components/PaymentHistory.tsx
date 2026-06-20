@@ -9,6 +9,7 @@ type Installment = {
   amount: number
   payment_date: string
   loan_id: number
+  recorded_by?: string
 }
 
 export default function PaymentHistory({ loanId }: { loanId: number | string }) {
@@ -99,6 +100,7 @@ export default function PaymentHistory({ loanId }: { loanId: number | string }) 
           <tr className="text-left text-xs text-gray-500">
             <th className="pb-2">Date</th>
             <th className="pb-2">Amount Paid</th>
+            <th className="pb-2">Recorded By</th>
             <th className="pb-2">Remaining Balance</th>
           </tr>
         </thead>
@@ -107,6 +109,7 @@ export default function PaymentHistory({ loanId }: { loanId: number | string }) 
             <tr key={it.id} className="border-t">
               <td className="py-2">{new Date(it.payment_date).toLocaleString()}</td>
               <td className="py-2">KES {it.amount?.toLocaleString?.()}</td>
+              <td className="py-2">{it.recorded_by || "System"}</td>
               <td className="py-2">—</td>
             </tr>
           ))}

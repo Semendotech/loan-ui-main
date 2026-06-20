@@ -92,6 +92,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span>Manage Customers</span>
                 </NavLink>
               </li>
+              {user?.role === 'admin' && (
+                <li>
+                  <NavLink href="/dashboard/manage-staff" active={pathname?.startsWith("/dashboard/manage-staff") ?? false}>
+                    <Users className="w-5 h-5" />
+                    <span>Manage Staff</span>
+                  </NavLink>
+                </li>
+              )}
             </ul>
           </nav>
 

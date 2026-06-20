@@ -13,7 +13,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="backdrop-blur supports-[backdrop-filter]:bg-white/70 bg-white/60 text-slate-800 shadow-md sticky top-0 z-40">
+    <nav className="backdrop-blur supports-backdrop-filter:bg-white/70 bg-white/60 text-slate-800 shadow-md sticky top-0 z-40">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="font-semibold text-xl flex items-center text-slate-900 hover:opacity-80 transition-opacity">
@@ -48,7 +48,7 @@ export default function Navbar() {
                 <Link href="/dashboard" className="hover:text-green-600 transition-colors">Dashboard</Link>
                 <Link href="/changepassword" className="hover:text-green-600 transition-colors">Change Password</Link>
                 {user?.role === 'admin' && (
-                  <Link href="/admin" className="hover:text-green-600 transition-colors">Admin</Link>
+                  <Link href="/dashboard/manage-staff" className="hover:text-green-600 transition-colors">Manage Staff</Link>
                 )}
               </>
             )}
@@ -83,7 +83,7 @@ export default function Navbar() {
                   <Link href="/dashboard" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Dashboard</Link>
                   <Link href="/changepassword" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Change Password</Link>
                   {user?.role === 'admin' && (
-                    <Link href="/admin" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Admin</Link>
+                    <Link href="/dashboard/manage-staff" className="hover:bg-slate-100 py-2 px-3 rounded-md" onClick={toggleMenu}>Manage Staff</Link>
                   )}
                 </>
               )}

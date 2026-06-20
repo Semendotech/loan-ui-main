@@ -6,7 +6,7 @@ import config from "./config";
 import toast from "react-hot-toast";
 
 // Types
-interface User { id: number; username: string; role?: string; }
+interface User { id: number; username: string; first_name?: string; role?: string; }
 interface AuthContextType {
   user: User | null;
   loading: boolean;
