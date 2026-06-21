@@ -11,8 +11,10 @@ interface DefaulterItem {
   customer_name: string | null;
   id_number: string;
   phone: string | null;
-  loan_amount: number;
-  date_loan_taken: string;
+  loan_amount?: number | null;
+  amount?: number | null;
+  date_loan_taken?: string | null;
+  start_date?: string | null;
   loan_balance: number;
   days_defaulted: number;
 }
@@ -160,10 +162,14 @@ export default function DefaultersPage() {
                     <td className="px-2 py-2 text-sm text-gray-800">{row.id_number ?? "…"}</td>
                     <td className="px-2 py-2 text-sm text-gray-800">{row.phone ?? "—"}</td>
                     <td className="px-2 py-2 text-sm font-semibold text-gray-900">
-                      {row.loan_amount != null ? formatKesCurrency(row.loan_amount) : "…"}
+                      {row.loan_amount != null
+                        ? formatKesCurrency(row.loan_amount)
+                        : row.amount != null
+                        ? formatKesCurrency(row.amount)
+                        : "…"}
                     </td>
                     <td className="px-2 py-2 text-sm text-gray-800">
-                      {row.date_loan_taken ?? "—"}
+                      {row.date_loan_taken ?? row.start_date ?? "—"}
                     </td>
                     <td className="px-2 py-2 text-sm font-semibold text-red-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "…"}
