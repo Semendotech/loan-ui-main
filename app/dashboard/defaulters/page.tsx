@@ -121,25 +121,25 @@ export default function DefaultersPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Customer Name
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   ID Number
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Phone Number
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Loan Amount
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Date Loan Taken
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Loan Balance
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Days Defaulted
                 </th>
               </tr>
@@ -154,21 +154,21 @@ export default function DefaultersPage() {
               ) : (
                 displayRows.map((row, idx) => (
                   <tr key={row.loan_id ?? idx} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    <td className="px-2 py-2 text-sm font-medium text-gray-900">
                       {row.customer_name ?? "…"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-800">{row.id_number ?? "…"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-800">{row.phone ?? "—"}</td>
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                    <td className="px-2 py-2 text-sm text-gray-800">{row.id_number ?? "…"}</td>
+                    <td className="px-2 py-2 text-sm text-gray-800">{row.phone ?? "—"}</td>
+                    <td className="px-2 py-2 text-sm font-semibold text-gray-900">
                       {row.loan_amount != null ? formatKesCurrency(row.loan_amount) : "…"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-800">
+                    <td className="px-2 py-2 text-sm text-gray-800">
                       {row.date_loan_taken ?? "—"}
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-red-700">
+                    <td className="px-2 py-2 text-sm font-semibold text-red-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "…"}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-2 py-2 text-sm">
                       {row.days_defaulted != null ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                           {row.days_defaulted} days
