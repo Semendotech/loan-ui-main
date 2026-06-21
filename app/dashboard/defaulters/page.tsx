@@ -13,8 +13,14 @@ interface DefaulterItem {
   phone: string | null;
   loan_amount?: number | null;
   amount?: number | null;
+  total_amount?: number | null;
   date_loan_taken?: string | null;
   start_date?: string | null;
+  loan?: {
+    amount?: number | null;
+    start_date?: string | null;
+    date_loan_taken?: string | null;
+  };
   loan_balance: number;
   days_defaulted: number;
 }
@@ -166,10 +172,14 @@ export default function DefaultersPage() {
                         ? formatKesCurrency(row.loan_amount)
                         : row.amount != null
                         ? formatKesCurrency(row.amount)
+                        : row.total_amount != null
+                        ? formatKesCurrency(row.total_amount)
+                        : row.loan?.amount != null
+                        ? formatKesCurrency(row.loan.amount)
                         : "…"}
                     </td>
                     <td className="px-2 py-2 text-sm text-gray-800">
-                      {row.date_loan_taken ?? row.start_date ?? "—"}
+                      {row.date_loan_taken ?? row.start_date ?? row.loan?.date_loan_taken ?? row.loan?.start_date ?? "—"}
                     </td>
                     <td className="px-2 py-2 text-sm font-semibold text-red-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "…"}
