@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from "next/navigation";
 import config from "./config";
 import toast from "react-hot-toast";
+import { clearSessionToken, getAuthHeaders, setSessionToken } from "./sessionToken";
 
 // Types
 interface User { id: number; username: string; first_name?: string; role?: string; }
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const res = await fetch(`${config.api.baseUrl}/auth/me`, {
         credentials: "include",
+        headers: getAuthHeaders(),
       });
       if (res.ok) {
         const data = await res.json();
@@ -67,6 +69,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
   
       if (res.ok) {
+        const loginData = await res.json();
+        if (loginData?.access_token) {
+          setSessionToken(loginData.access_token);
+        }
         await refreshUser();
         toast.success("Welcome back!");
         router.push("/dashboard");
@@ -93,7 +99,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetch(`${config.api.baseUrl}/auth/logout`, {
         method: "POST",
         credentials: "include",
+        headers: getAuthHeaders(),
       });
+      clearSessionToken();
       setUser(null);
       toast.success("Logged out!");
       router.push("/login");

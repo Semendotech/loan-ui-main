@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_VERSION = 'loan-manager-cache-v2026-06-19T11-50-22-234Z';
+const CACHE_VERSION = 'loan-manager-cache-v2026-06-21T12-41-09-463Z';
 const CACHE_NAME = 'loan-manager-cache-' + CACHE_VERSION;
 const urlsToCache = [
   '/',
@@ -47,22 +47,31 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
+  // Never intercept cross-origin requests (backend API calls)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   if (request.method !== 'GET') {
     return;
   }
 
+  const networkOrCache = () =>
+    fetch(request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(request);
+        return cached || Response.error();
+      });
+
   if (isNavigationRequest(request)) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
+    event.respondWith(networkOrCache());
     return;
   }
 
@@ -84,15 +93,5 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(request))
-  );
+  event.respondWith(networkOrCache());
 });

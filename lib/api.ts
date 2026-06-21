@@ -1,4 +1,5 @@
 import config from './config';
+import { getAuthHeaders } from './sessionToken';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
@@ -22,6 +23,7 @@ export async function apiRequest<T>(
   
   const headers = {
     'Content-Type': 'application/json',
+    ...getAuthHeaders(),
     ...(options.headers || {}),
   };
   
