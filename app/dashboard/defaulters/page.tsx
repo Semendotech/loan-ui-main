@@ -41,9 +41,16 @@ export default function DefaultersPage() {
     setLoading(true);
     try {
       const data = await api.get(`/dashboard/defaulters${buildQueryString()}`);
-      const response = (data as { data?: { items?: DefaulterItem[] }; items?: DefaulterItem[] })?.data ?? data;
-      const items = (response as { items?: DefaulterItem[] })?.items;
-      setDefaulters(Array.isArray(items) ? items : []);
+      console.log("Defaulters API data:", data);
+      const response = (data as any)?.data ?? data;
+      const items = Array.isArray(response)
+        ? response
+        : Array.isArray(response?.items)
+        ? response.items
+        : Array.isArray((response as any)?.data)
+        ? (response as any).data
+        : [];
+      setDefaulters(items);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load defaulters");
