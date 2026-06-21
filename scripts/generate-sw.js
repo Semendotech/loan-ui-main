@@ -53,31 +53,22 @@ self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
 
-  // Never intercept cross-origin requests (backend API calls)
-  if (url.origin !== self.location.origin) {
-    return;
-  }
-
   if (request.method !== 'GET') {
     return;
   }
 
-  const networkOrCache = () =>
-    fetch(request)
-      .then((response) => {
-        if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-        }
-        return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(request);
-        return cached || Response.error();
-      });
-
   if (isNavigationRequest(request)) {
-    event.respondWith(networkOrCache());
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
     return;
   }
 
@@ -99,7 +90,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(networkOrCache());
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request))
+  );
 });
 `;
 
