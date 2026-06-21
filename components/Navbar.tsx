@@ -63,6 +63,7 @@ export default function Navbar() {
               </Link>
             ) : (
               <button
+                type="button"
                 onClick={logout}
                 className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg font-medium transition-colors text-white shadow"
               >
@@ -99,6 +100,7 @@ export default function Navbar() {
                 </Link>
               ) : (
                 <button
+                  type="button"
                   onClick={() => {
                     logout();
                     toggleMenu();

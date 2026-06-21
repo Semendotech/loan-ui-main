@@ -8,12 +8,11 @@ import toast from "react-hot-toast";
 
 export default function LoginPage() {
 
-  const { loading: authLoading, isAuthenticated } = useAuth();
+  const { loading: authLoading, isAuthenticated, login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
 
 
@@ -33,9 +32,7 @@ export default function LoginPage() {
     try {
       const result = await login(username, password);
       
-      if (result.success) {
-        router.push("/dashboard");
-      } else {
+      if (!result.success) {
         setError(result.message);
         toast.error(result.message || "Login failed");
       }
