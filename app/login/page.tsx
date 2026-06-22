@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
-import Link from "next/link";
 import toast from "react-hot-toast";
 
 export default function LoginPage() {
@@ -98,15 +97,6 @@ export default function LoginPage() {
           {isLoading ? "Signing in..." : "Sign In"}
         </button>
       </form>
-
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link href="/signup" className="font-semibold text-green-700 hover:text-green-800">
-            Create account
-          </Link>
-        </p>
-      </div>
     </div>
   );
 }
