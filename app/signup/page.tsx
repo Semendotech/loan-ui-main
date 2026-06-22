@@ -35,10 +35,7 @@ export default function SignupPage() {
       toast.success("Account created successfully. Please log in.");
       router.push("/login");
     } catch (err: unknown) {
-      const message =
-        err && typeof err === "object" && "message" in err && typeof err.message === "string"
-          ? err.message
-          : "Unable to create account.";
+      const message = err instanceof Error ? err.message : "Unable to create account.";
       setError(message);
       toast.error(message);
     } finally {
