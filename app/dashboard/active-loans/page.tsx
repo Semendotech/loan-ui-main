@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { calculateDailyInstalment, formatKesCurrency } from "@/lib/loanCalculations";
 
 interface LoanItem {
@@ -27,6 +28,8 @@ function getDailyInstalment(loan: LoanItem): number {
 }
 
 export default function ActiveLoansPage() {
+	const { user } = useAuth();
+	const isAdmin = String(user?.role ?? "").toLowerCase() === "admin";
 	const [loans, setLoans] = useState<LoanItem[]>([]);
 	const [q, setQ] = useState("");
 	const [loading, setLoading] = useState(false);
@@ -54,6 +57,7 @@ export default function ActiveLoansPage() {
 	}, []);
 
 	const startEdit = (loan: LoanItem) => {
+		if (!isAdmin) return;
 		setEditingId(loan.id);
 		setEditAmount(String(loan.amount ?? ""));
 		setEditRate(String(loan.interest_rate ?? ""));
@@ -72,6 +76,7 @@ export default function ActiveLoansPage() {
 	};
 
 	const saveEdit = async (loan: LoanItem) => {
+		if (!isAdmin) return;
 		setSaving(true);
 		try {
 			const loanPayload: Record<string, string | number> = {};
@@ -85,7 +90,6 @@ export default function ActiveLoansPage() {
 				}
 				loanPayload.amount = amount;
 			}
-
 			if (editRate.trim()) {
 				const rate = parseFloat(editRate);
 				if (rate < 0) {
@@ -121,18 +125,18 @@ export default function ActiveLoansPage() {
 	const displayLoans = loading ? Array.from({ length: 5 }, (_, idx) => ({ id: idx } as LoanItem)) : loans;
 
 	return (
-		<div className="container mx-auto px-4 py-6">
+		<div className="w-full px-4 sm:px-6 lg:px-8 py-6 max-w-[1400px] mx-auto">
 			<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 				<h1 className="text-2xl font-bold">Active Loans</h1>
-				<div className="flex gap-2">
+				<div className="flex gap-2 w-full md:w-auto">
 					<input
 						type="text"
 						placeholder="Search by Loan ID or Customer ID Number"
 						value={q}
 						onChange={(e) => setQ(e.target.value)}
-						className="px-4 py-2 border border-gray-300 rounded-md text-black"
+						className="flex-1 md:flex-none md:w-72 px-4 py-2 border border-gray-300 rounded-md text-black text-sm"
 					/>
-					<button onClick={load} className="px-4 py-2 bg-green-600 text-white rounded-md">
+					<button onClick={load} className="px-5 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">
 						Search
 					</button>
 				</div>
@@ -140,17 +144,25 @@ export default function ActiveLoansPage() {
 
 			<div className="bg-white rounded-lg shadow-sm border overflow-hidden">
 				<div className="overflow-x-auto">
-						<table className="table-auto divide-y divide-gray-200">
-						<thead className="bg-gray-50">
+					<table className="w-full divide-y divide-gray-200">
+						<colgroup>
+							<col className="w-[8%]" />
+							<col className="w-[13%]" />
+							<col className="w-[14%]" />
+							<col className="w-[13%]" />
+							<col className="w-[24%]" />
+							<col className="w-[14%]" />
+							<col className="w-[14%]" />
+						</colgroup>
+						<thead className="bg-gray-50 sticky top-0 z-10">
 							<tr>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan #</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Amount</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Remaining</th>
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer</th>
-
-								<th className="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Timeline</th>
-								<th className="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
+								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan #</th>
+								<th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Amount</th>
+								<th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
+								<th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Remaining</th>
+								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer</th>
+								<th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Timeline</th>
+								<th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wide">Actions</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-100">
@@ -163,39 +175,41 @@ export default function ActiveLoansPage() {
 							) : (
 								displayLoans.map((loan, idx) => (
 									<Fragment key={loan.id ?? idx}>
-										<tr className="hover:bg-gray-50">
-											<td className="px-4 py-2 text-sm font-medium text-gray-900">{loan.id ?? "…"}</td>
-                                            <td className="px-4 py-2 text-sm text-gray-800">
-                                                {loan.amount != null ? formatKesCurrency(loan.amount) : "…"}
-                                            </td>
-                                            <td className="px-4 py-2 text-sm font-semibold text-green-700">
-                                                {loan.amount != null && loan.interest_rate != null
-                                                    ? formatKesCurrency(getDailyInstalment(loan))
-                                                    : "…"}
-                                            </td>
-                                            <td className="px-4 py-2 text-sm text-gray-800">
-                                                {loan.remaining_amount != null ? formatKesCurrency(loan.remaining_amount) : "…"}
-                                            </td>
-                                            <td className="px-4 py-2 text-sm text-gray-800 leading-tight">
-                                                <div className="font-medium">{loan.customer?.name ?? "Unknown"}</div>
-                                                <div className="text-xs text-gray-500 mt-0.5">{loan.customer?.id_number ?? "…"}</div>
-                                            </td>
-											<td className="px-4 py-2 text-sm text-gray-600 leading-tight">
+										<tr className="hover:bg-gray-50 even:bg-gray-50/40">
+											<td className="px-4 py-3 text-sm font-medium text-gray-900">{loan.id ?? "…"}</td>
+											<td className="px-4 py-3 text-sm text-gray-800 text-right tabular-nums">
+												{loan.amount != null ? formatKesCurrency(loan.amount) : "…"}
+											</td>
+											<td className="px-4 py-3 text-sm font-semibold text-green-700 text-right tabular-nums">
+												{loan.amount != null && loan.interest_rate != null
+													? formatKesCurrency(getDailyInstalment(loan))
+													: "…"}
+											</td>
+											<td className="px-4 py-3 text-sm text-gray-800 text-right tabular-nums">
+												{loan.remaining_amount != null ? formatKesCurrency(loan.remaining_amount) : "…"}
+											</td>
+											<td className="px-4 py-3 text-sm text-gray-800 leading-tight">
+												<div className="font-medium">{loan.customer?.name ?? "Unknown"}</div>
+												<div className="text-xs text-gray-500 mt-0.5">{loan.customer?.id_number ?? "…"}</div>
+											</td>
+											<td className="px-4 py-3 text-sm text-gray-600 leading-tight whitespace-nowrap">
 												<div>Start: {loan.start_date ?? "…"}</div>
 												<div className="mt-0.5">Due: {loan.due_date ?? "…"}</div>
 											</td>
-											<td className="px-4 py-2 text-sm text-right whitespace-nowrap">
+											<td className="px-4 py-3 text-sm text-right whitespace-nowrap">
 												{loan.id ? (
 													<div className="flex justify-end gap-2">
-														<button
-															onClick={() => startEdit(loan)}
-															className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50"
-														>
-															Edit
-														</button>
+														{isAdmin ? (
+															<button
+																onClick={() => startEdit(loan)}
+																className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50 min-w-[60px]"
+															>
+																Edit
+															</button>
+														) : null}
 														<Link
 															href={`/dashboard/loans/${loan.id}`}
-															className="px-3 py-1.5 text-sm bg-gray-900 text-white rounded-md"
+															className="px-3 py-1.5 text-sm bg-gray-900 text-white rounded-md min-w-[60px] text-center"
 														>
 															View
 														</Link>
@@ -252,8 +266,6 @@ export default function ActiveLoansPage() {
 																/>
 															</div>
 														</div>
-
-
 
 														<div className="flex justify-end gap-2 mt-3">
 															<button onClick={cancelEdit} className="px-3 py-1.5 text-sm border rounded-md hover:bg-gray-50">
