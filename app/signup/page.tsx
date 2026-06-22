@@ -8,7 +8,6 @@ import { api } from "@/lib/api";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,13 +30,15 @@ export default function SignupPage() {
       await api.post("/auth/signup", {
         username,
         password,
-        email,
         first_name: fullName || undefined,
       });
       toast.success("Account created successfully. Please log in.");
       router.push("/login");
-    } catch (err: any) {
-      const message = err?.message || "Unable to create account.";
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err && typeof err.message === "string"
+          ? err.message
+          : "Unable to create account.";
       setError(message);
       toast.error(message);
     } finally {
@@ -75,15 +76,15 @@ export default function SignupPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
+          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+            Username
           </label>
           <input
-            id="email"
-            type="email"
-            placeholder="Enter your email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="username"
+            type="text"
+            placeholder="Choose a username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors text-black"
             required
           />
