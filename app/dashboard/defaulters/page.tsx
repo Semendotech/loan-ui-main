@@ -33,7 +33,7 @@ export default function DefaultersPage() {
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
-    params.set("date", selectedDate);
+    params.set("end_date", selectedDate);
     return `?${params.toString()}`;
   };
 

@@ -24,7 +24,8 @@ export default function UncollectedDuesPage() {
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
-    params.set("date", selectedDate);
+    params.set("start_date", selectedDate);
+    params.set("end_date", selectedDate);
     return `?${params.toString()}`;
   };
 
