@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,6 +31,7 @@ export default function SignupPage() {
       await api.post("/auth/signup", {
         username,
         password,
+        email,
         first_name: fullName || undefined,
       });
       toast.success("Account created successfully. Please log in.");
@@ -50,9 +52,9 @@ export default function SignupPage() {
         <p className="text-gray-600">Enter your details to get started.</p>
       </div>
 
-      {message && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-6">
-          {message}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          {error}
         </div>
       )}
 
@@ -119,9 +121,12 @@ export default function SignupPage() {
 
         <button
           type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors"
+          disabled={isLoading}
+          className={`w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors ${
+            isLoading ? "opacity-70 cursor-not-allowed" : ""
+          }`}
         >
-          Create account
+          {isLoading ? "Creating account..." : "Create account"}
         </button>
       </form>
 
