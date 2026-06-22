@@ -133,29 +133,38 @@ export default function DefaultersPage() {
 
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="table-auto divide-y divide-gray-200">
+          <table className="w-full table-fixed divide-y divide-gray-200">
+            <colgroup>
+              <col className="w-[20%]" />
+              <col className="w-[12%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[13%]" />
+              <col className="w-[14%]" />
+              <col className="w-[15%]" />
+            </colgroup>
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
                   Customer Name
                 </th>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
                   ID Number
                 </th>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                  Phone Number
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
+                  Phone
                 </th>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
                   Loan Amount
                 </th>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                  Date Loan Taken
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
+                  Date Taken
                 </th>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                  Loan Balance
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
+                  Balance
                 </th>
-                <th className="px-2 py-2 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                  Days Defaulted
+                <th className="px-2 py-2 text-left text-[11px] font-semibold text-gray-600 uppercase tracking-wide truncate">
+                  Days
                 </th>
               </tr>
             </thead>
@@ -169,12 +178,12 @@ export default function DefaultersPage() {
               ) : (
                 displayRows.map((row, idx) => (
                   <tr key={row.loan_id ?? idx} className="hover:bg-gray-50">
-                    <td className="px-2 py-2 text-sm font-medium text-gray-900">
+                    <td className="px-2 py-2 text-sm font-medium text-gray-900 truncate" title={row.customer_name ?? undefined}>
                       {row.customer_name ?? "…"}
                     </td>
-                    <td className="px-2 py-2 text-sm text-gray-800">{row.id_number ?? "…"}</td>
-                    <td className="px-2 py-2 text-sm text-gray-800">{row.phone ?? "—"}</td>
-                    <td className="px-2 py-2 text-sm font-semibold text-gray-900">
+                    <td className="px-2 py-2 text-sm text-gray-800 truncate">{row.id_number ?? "…"}</td>
+                    <td className="px-2 py-2 text-sm text-gray-800 truncate">{row.phone ?? "—"}</td>
+                    <td className="px-2 py-2 text-sm font-semibold text-gray-900 truncate">
                       {row.loan_amount != null
                         ? formatKesCurrency(row.loan_amount)
                         : row.amount != null
@@ -185,15 +194,15 @@ export default function DefaultersPage() {
                         ? formatKesCurrency(row.loan.amount)
                         : "…"}
                     </td>
-                    <td className="px-2 py-2 text-sm text-gray-800">
+                    <td className="px-2 py-2 text-sm text-gray-800 truncate">
                       {row.date_loan_taken ?? row.start_date ?? row.loan?.date_loan_taken ?? row.loan?.start_date ?? "—"}
                     </td>
-                    <td className="px-2 py-2 text-sm font-semibold text-red-700">
+                    <td className="px-2 py-2 text-sm font-semibold text-red-700 truncate">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "…"}
                     </td>
                     <td className="px-2 py-2 text-sm">
                       {row.days_defaulted != null ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800 whitespace-nowrap">
                           {row.days_defaulted} days
                         </span>
                       ) : (
