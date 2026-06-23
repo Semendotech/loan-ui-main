@@ -60,7 +60,7 @@ function OverdueManager() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/arrears?only_active=true&limit=100");
+      const res = await api.get("/arrears?only_active=true&limit=50");
       const data = (res as any).data ?? res;
       setOverdue(Array.isArray(data) ? data : []);
     } finally {

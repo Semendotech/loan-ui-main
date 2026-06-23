@@ -38,6 +38,8 @@ export default function ManageCustomersPage() {
 }
 
 function ManageCustomers() {
+  const { user } = useAuth();
+  const isAdmin = String(user?.role ?? "").toLowerCase() === "admin";
   const [query, setQuery] = useState("");
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,7 +47,7 @@ function ManageCustomers() {
   const FALLBACK_AVATAR = "/avatar-placeholder.svg";
   const router = useRouter();
 
-  const DISPLAY_LIMIT = 100; // Limit for initial display
+  const DISPLAY_LIMIT = 50; // Limit for initial display
 
   const loadCustomers = async (searchQuery: string = "") => {
     setLoading(true);
@@ -226,14 +228,16 @@ function ManageCustomers() {
                   >
                     View details
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCustomer({ id: c.id, name: c.name || "Customer" })}
-                    disabled={deletingCustomerId === c.id}
-                    className="text-xs text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {deletingCustomerId === c.id ? "Deleting..." : "Delete"}
-                  </button>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomer({ id: c.id, name: c.name || "Customer" })}
+                      disabled={deletingCustomerId === c.id}
+                      className="text-xs text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {deletingCustomerId === c.id ? "Deleting..." : "Delete"}
+                    </button>
+                  ) : null}
                 </div>
 
                 <div className="pointer-events-none absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">

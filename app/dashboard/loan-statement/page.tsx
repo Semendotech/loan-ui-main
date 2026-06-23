@@ -65,7 +65,7 @@ export default function LoanStatementPage() {
   const loadCustomers = async (search = "", nextPage = false) => {
     setLoadingCustomers(true);
     try {
-      const pageSize = 100;
+      const pageSize = 50;
       const pageToLoad = nextPage ? page + 1 : 0;
       const params: Record<string, string> = {
         limit: String(pageSize),
