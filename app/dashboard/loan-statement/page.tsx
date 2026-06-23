@@ -74,9 +74,11 @@ export default function LoanStatementPage() {
       if (search.trim()) {
         params.q = search.trim();
       }
-      const response = await api.get<CustomerSummary[]>("/customers", { params });
-      const data = (response as any)?.data ?? response;
-      const list = Array.isArray(data) ? data : [];
+      const response = await api.get<{
+        items: CustomerSummary[];
+        total: number;
+      }>("/customers", { params });
+      const list = Array.isArray((response as any)?.items) ? (response as any).items : [];
       setCustomers((prev) => (nextPage ? [...prev, ...list] : list));
       setPage(pageToLoad);
       setHasMore(list.length === pageSize);

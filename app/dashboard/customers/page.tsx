@@ -44,45 +44,59 @@ function ManageCustomers() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingCustomerId, setDeletingCustomerId] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const [totalCustomers, setTotalCustomers] = useState(0);
   const FALLBACK_AVATAR = "/avatar-placeholder.svg";
   const router = useRouter();
 
-  const DISPLAY_LIMIT = 50; // Limit for initial display
+  const DISPLAY_LIMIT = 50; // Limit per page
 
-  const loadCustomers = async (searchQuery: string = "") => {
+  const loadCustomers = async (searchQuery: string = "", pageNumber = 0) => {
     setLoading(true);
     try {
       const params: Record<string, string> = {
         limit: String(DISPLAY_LIMIT),
+        offset: String(pageNumber * DISPLAY_LIMIT),
       };
-      
-      // If searching, add query parameter (searches entire database)
-      // If not searching, just load limited display list
+
       if (searchQuery.trim()) {
         params.q = searchQuery.trim();
-        // When searching, increase limit to show more results
-        params.limit = "200";
       }
 
-      const res = await api.get<Array<{
-        id: number;
-        name: string;
-        id_number: string;
-        phone: string | null;
-        location: string | null;
-        profile_image_url: string | null;
-        created_at: string;
-        has_active_loan: boolean;
-      }>>("/customers", { params });
-      
-      const data = Array.isArray(res) ? res : [];
-      setCustomers(data);
+      const res = await api.get<{
+        items: Array<{
+          id: number;
+          name: string;
+          id_number: string;
+          phone: string | null;
+          location: string | null;
+          profile_image_url: string | null;
+          created_at: string;
+          has_active_loan: boolean;
+        }>;
+        total: number;
+      }>("/customers", { params });
+
+      const items = Array.isArray((res as any)?.items) ? (res as any).items : [];
+      setCustomers(items);
+      setTotalCustomers((res as any)?.total ?? 0);
+      setPage(pageNumber);
     } catch (error) {
       console.error("Failed to load customers:", error);
       setCustomers([]);
+      setTotalCustomers(0);
     } finally {
       setLoading(false);
     }
+  };
+
+  const pageCount = totalCustomers > 0 ? Math.ceil(totalCustomers / DISPLAY_LIMIT) : 1;
+  const canGoPrev = page > 0;
+  const canGoNext = page + 1 < pageCount;
+
+  const handlePageChange = (pageNumber: number) => {
+    if (pageNumber < 0 || pageNumber >= pageCount || pageNumber === page) return;
+    loadCustomers(query, pageNumber);
   };
 
   // Initial load on mount
@@ -93,7 +107,7 @@ function ManageCustomers() {
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      loadCustomers(query);
+      loadCustomers(query, 0);
     }, 400);
 
     return () => clearTimeout(timer);
@@ -164,7 +178,47 @@ function ManageCustomers() {
           {query.trim() ? "No customers found matching your search" : "No customers found"}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-gray-600">
+              Page {page + 1} of {pageCount} ({totalCustomers} total)
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => handlePageChange(0)}
+                disabled={!canGoPrev}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 disabled:opacity-50"
+              >
+                First
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={!canGoPrev}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={!canGoNext}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 disabled:opacity-50"
+              >
+                Next
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePageChange(pageCount - 1)}
+                disabled={!canGoNext}
+                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 disabled:opacity-50"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {customers.map((c) => {
             const hasActiveLoan =
               typeof c.has_active_loan === "boolean"
