@@ -49,7 +49,7 @@ function ManageCustomers() {
   const FALLBACK_AVATAR = "/avatar-placeholder.svg";
   const router = useRouter();
 
-  const DISPLAY_LIMIT = 50; // Limit per page
+  const DISPLAY_LIMIT = 50;
 
   const loadCustomers = async (searchQuery: string = "", pageNumber = 0) => {
     setLoading(true);
@@ -99,12 +99,10 @@ function ManageCustomers() {
     loadCustomers(query, pageNumber);
   };
 
-  // Initial load on mount
   useEffect(() => {
     loadCustomers();
   }, []);
 
-  // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
       loadCustomers(query, 0);
@@ -165,7 +163,7 @@ function ManageCustomers() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name / id / phone / location (searches entire database)"
+            placeholder="Search by name / id / phone / location"
             className="flex-1 px-3 py-2 border rounded"
           />
         </div>
