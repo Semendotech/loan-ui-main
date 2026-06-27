@@ -20,7 +20,7 @@ const config = {
   // API configuration
   api: {
     baseUrl: API_URL,
-    timeout: 10000, // 10 seconds
+    timeout: 30000, // 30 seconds
   },
 
   cloudinary: {
