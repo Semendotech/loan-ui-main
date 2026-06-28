@@ -150,11 +150,16 @@ function CustomerDetail({
 
   const handlePay = async () => {
     if (!customer?.id_number || !amount) return;
-
-    const activeLoan = customer.loans?.find(
-      (loan: any) => normalizeStatus(loan.status) === "active"
+    // Pick the loan that actually has an outstanding balance, regardless of
+    // status (ACTIVE, OVERDUE, or ARREARS all need to accept payments here).
+    const payableLoan = customer.loans?.find(
+      (loan: any) => Number(loan.remaining_amount ?? 0) > 0
     );
-    const remaining = Number(activeLoan?.remaining_amount ?? 0);
+    if (!payableLoan) {
+      toast.error("No loan with an outstanding balance found for this customer");
+      return;
+    }
+    const remaining = Number(payableLoan.remaining_amount ?? 0);
     const numericAmount = parseFloat(amount);
     if (remaining > 0 && numericAmount > remaining) {
       toast.error(
@@ -162,11 +167,10 @@ function CustomerDetail({
       );
       return;
     }
-
     setSubmitting(true);
     try {
-      await api.post("/payments", {
-        id_number: customer.id_number,
+      await api.post("/payments/record", {
+        loan_id: payableLoan.id,
         amount: numericAmount,
       });
       toast.success("Payment recorded");
@@ -180,7 +184,6 @@ function CustomerDetail({
       setSubmitting(false);
     }
   };
-
   if (!customer) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500 text-sm">
