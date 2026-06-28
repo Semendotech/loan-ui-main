@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import { api } from "@/lib/api";
@@ -40,7 +40,7 @@ function useActiveCustomers() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  const LIMIT = 50;
+  const LIMIT = 10000;
 
   const fetchActive = async (search = "", reset = false) => {
     if (loading) return;
@@ -204,7 +204,7 @@ function CustomerDetail({
         </div>
         <div className="text-sm text-gray-600">
           {customer.phone || "No phone"}
-          {customer.location ? ` · ${customer.location}` : ""}
+          {customer.location ? ` Â· ${customer.location}` : ""}
         </div>
       </div>
       <div className="mt-4 flex-1 overflow-y-auto">
@@ -235,14 +235,14 @@ function CustomerDetail({
                       </span>
                     </div>
                     <div className="mt-1 text-xs text-gray-600">
-                      Start: {loan.start_date} · Due: {loan.due_date}
+                      Start: {loan.start_date} Â· Due: {loan.due_date}
                     </div>
                     <div className="mt-1 text-xs text-gray-600">
                       Remaining Amount: KSh {loan.remaining_amount}
                     </div>
                     {isOverdueOrArrears && (
                       <div className="mt-2 text-xs text-yellow-700 font-medium">
-                        ⚠️ This loan must be paid through the Overdue page
+                        âš ï¸ This loan must be paid through the Overdue page
                       </div>
                     )}
                   </div>
@@ -273,7 +273,7 @@ function CustomerDetail({
           ) : hasOverdueLoan ? (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <div className="text-sm text-yellow-800 font-medium mb-1">
-                ⚠️ Overdue Loan Detected
+                âš ï¸ Overdue Loan Detected
               </div>
               <div className="text-xs text-yellow-700">
                 Loans that are overdue must be paid through the{" "}
@@ -375,7 +375,7 @@ useEffect(() => {
               onClick={handleBackToList}
               className="text-sm text-green-700 hover:text-green-900 font-semibold flex items-center gap-2"
             >
-              ← Back to Active Borrowers
+              â† Back to Active Borrowers
             </button>
             <h4 className="text-lg font-semibold mt-2">
               {detail?.name || "Borrower"} Installment
@@ -439,7 +439,7 @@ useEffect(() => {
                     <div className="font-semibold text-gray-900">{cust.name}</div>
                     <div className="text-xs text-gray-500">
                       {cust.id_number}
-                      {cust.phone ? ` · ${cust.phone}` : ""}
+                      {cust.phone ? ` Â· ${cust.phone}` : ""}
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -499,3 +499,4 @@ export default function PayInstallmentsPage() {
     </section>
   );
 }
+
