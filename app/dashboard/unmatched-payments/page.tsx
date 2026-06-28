@@ -93,7 +93,7 @@ function UnmatchedPaymentsView() {
         </p>
   <div className="flex gap-2">
           <button
-            onClick={() => { setLoading(true); api.get("/c2b/unmatched-payments").then(setPayments).catch(() => setError("Failed to load.")).finally(() => setLoading(false)); }}
+            onClick={() => { setLoading(true); api.get<UnmatchedPayment[]>("/c2b/unmatched-payments").then(setPayments).catch(() => setError("Failed to load.")).finally(() => setLoading(false)); }}
             className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 transition"
           >
             Refresh
