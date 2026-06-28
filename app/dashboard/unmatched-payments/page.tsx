@@ -10,6 +10,7 @@ interface UnmatchedPayment {
   trans_id: string;
   amount: number;
   phone: string;
+  sender_name: string;
   created_at: string;
 }
 
@@ -62,7 +63,19 @@ function UnmatchedPaymentsView() {
 
   const handlePrint = async () => {
     setDownloading(true);
-    window.print();
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/c2b/unmatched-payments-pdf", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `unmatched_payments_${new Date().toISOString().slice(0,10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { window.print(); }
     setDownloading(false);
   };
 
@@ -118,6 +131,7 @@ function UnmatchedPaymentsView() {
                 <tr className="border-b bg-gray-50">
                   <th className="px-4 py-2 text-left text-xs font-semibold uppercase">#</th>
                   <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Transaction ID</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Sender Name</th>
                   <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Phone</th>
                   <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Amount</th>
                   <th className="px-4 py-2 text-left text-xs font-semibold uppercase">Date</th>
@@ -131,7 +145,8 @@ function UnmatchedPaymentsView() {
                     <tr key={p.id} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-2 text-sm text-gray-500">{i + 1}</td>
                       <td className="px-4 py-2 text-sm font-mono text-gray-800">{p.trans_id}</td>
-                      <td className="px-4 py-2 text-sm">{p.phone}</td>
+                      <td className="px-4 py-2 text-sm">{p.sender_name || "-"}</td>
+                      <td className="px-4 py-2 text-sm">{p.phone.length === 64 ? "Unknown" : p.phone}</td>
                       <td className="px-4 py-2 text-sm font-medium text-red-600">{formatKes(p.amount)}</td>
                       <td className="px-4 py-2 text-sm">{dt.toLocaleDateString()}</td>
                       <td className="px-4 py-2 text-sm">{dt.toLocaleTimeString()}</td>
