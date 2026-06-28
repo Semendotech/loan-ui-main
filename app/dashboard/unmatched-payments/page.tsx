@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, apiRequest } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
@@ -64,11 +64,8 @@ function UnmatchedPaymentsView() {
   const handlePrint = async () => {
     setDownloading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/c2b/unmatched-payments-pdf", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const blob = await res.blob();
+      const res = await apiRequest<Response>("/c2b/unmatched-payments-pdf", { rawResponse: true });
+      const blob = await (res as unknown as globalThis.Response).blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
