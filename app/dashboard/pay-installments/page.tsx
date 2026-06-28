@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 import { useAuth } from "@/lib/auth";
@@ -39,46 +39,45 @@ function useActiveCustomers() {
   const [loading, setLoading] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-
   const LIMIT = 10000;
+  // Tracks the most recently issued request so stale/out-of-order responses
+  // get ignored instead of silently overwriting fresher data, or (the old bug)
+  // being dropped entirely whenever a debounced search arrived while a prior
+  // fetch was still in flight.
+  const latestRequestId = useRef(0);
+  const lastSearchRef = useRef("");
 
   const fetchActive = async (search = "", reset = false) => {
-    if (loading) return;
-
+    const requestId = ++latestRequestId.current;
+    lastSearchRef.current = search;
     setLoading(true);
     try {
       const currentOffset = reset ? 0 : offset;
-
       const res = await api.get<{
         items: ActiveLoan[];
         limit: number;
         offset: number;
         count: number;
         has_more: boolean;
-      }>("/loans/active", {
-       params: {
-  ...(search ? { q: search } : {}),
-  limit: String(LIMIT),
-  offset: String(currentOffset),
-}
-,
+      }>("/loans/payable", {
+        params: {
+          ...(search ? { q: search } : {}),
+          limit: String(LIMIT),
+          offset: String(currentOffset),
+        },
       });
 
+      if (requestId !== latestRequestId.current) return;
+
       const data = res;
-
       const rows: ActiveLoan[] = data.items || [];
-
       const grouped = new Map<string, ActiveCustomer>();
-
-      // When resetting, start with empty map. Otherwise, preserve existing customers.
       if (!reset) {
         customers.forEach(c => grouped.set(c.id_number, c));
       }
-
       rows.forEach((loan) => {
         const key = loan.customer?.id_number;
         if (!key) return;
-
         if (!grouped.has(key)) {
           grouped.set(key, {
             id_number: key,
@@ -88,33 +87,29 @@ function useActiveCustomers() {
             loans: [],
           });
         }
-
         grouped.get(key)!.loans.push(loan);
       });
-
       setCustomers(Array.from(grouped.values()));
-      // Update offset: if reset, set to LIMIT (since we loaded LIMIT items from offset 0)
-      // Otherwise, increment by LIMIT
       setOffset(reset ? LIMIT : offset + LIMIT);
       setHasMore(data.has_more);
     } catch (error: any) {
-      toast.error("Failed to load active loans");
+      if (requestId === latestRequestId.current) {
+        toast.error("Failed to load active loans");
+      }
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestId.current) {
+        setLoading(false);
+      }
     }
   };
-
   const resetAndSearch = (search: string) => {
     setOffset(0);
     setHasMore(true);
     fetchActive(search, true);
   };
-
   const refetch = () => {
-    // Refetch with current search (we'll need to track it)
-    fetchActive("", true);
+    fetchActive(lastSearchRef.current, true);
   };
-
   return {
     customers,
     loading,
@@ -124,7 +119,6 @@ function useActiveCustomers() {
     refetch,
   };
 }
-
 
 function CustomerDetail({
   customer,
