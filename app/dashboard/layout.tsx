@@ -89,12 +89,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </NavLink>
               </li>
               {isAdmin && (
-                <li>
-                  <NavLink href="/dashboard/manage-staff" active={pathname?.startsWith("/dashboard/manage-staff") ?? false}>
-                    <Users className="w-5 h-5" />
-                    <span>Manage Staff</span>
-                  </NavLink>
-                </li>
+                <>
+                  <li>
+                    <NavLink href="/dashboard/unmatched-payments" active={pathname?.startsWith("/dashboard/unmatched-payments") ?? false}>
+                      <AlertTriangle className="w-5 h-5" />
+                      <span>Unmatched Payments</span>
+                    </NavLink>
+                  </li>
+                  <li>
+                    <NavLink href="/dashboard/manage-staff" active={pathname?.startsWith("/dashboard/manage-staff") ?? false}>
+                      <Users className="w-5 h-5" />
+                      <span>Manage Staff</span>
+                    </NavLink>
+                  </li>
+                </>
               )}
             </ul>
           </nav>
@@ -136,8 +144,3 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
     </Link>
   );
 }
-
-
-
-
-
