@@ -64,8 +64,10 @@ function UnmatchedPaymentsView() {
   const handlePrint = async () => {
     setDownloading(true);
     try {
-      const res = await apiRequest<Response>("/c2b/unmatched-payments-pdf", { rawResponse: true });
-      const blob = await (res as unknown as globalThis.Response).blob();
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      const res = await fetch(`${baseUrl}/c2b/unmatched-payments-pdf`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
