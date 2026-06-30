@@ -44,6 +44,8 @@ function OverdueTable() {
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [printing, setPrinting] = useState(false);
+  const [reportStartDate, setReportStartDate] = useState("");
+  const [reportEndDate, setReportEndDate] = useState("");
 
   const DISPLAY_LIMIT = 50;
 
@@ -131,14 +133,22 @@ function OverdueTable() {
   const handlePrintReport = async () => {
     setPrinting(true);
     try {
+      const params: Record<string, string> = {};
+      if (reportStartDate) params.start_date = reportStartDate;
+      if (reportEndDate) params.end_date = reportEndDate;
+
       const response = await api.get<Response>("/dashboard/overdue-report", {
+        params,
         rawResponse: true,
       });
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `overdue_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      const suffix = reportStartDate || reportEndDate
+        ? `_${reportStartDate || "start"}_to_${reportEndDate || "end"}`
+        : `_${new Date().toISOString().slice(0, 10)}`;
+      a.download = `overdue_report${suffix}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -153,7 +163,25 @@ function OverdueTable() {
 
   return (
     <div>
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap items-end justify-end gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+          <input
+            type="date"
+            value={reportStartDate}
+            onChange={(e) => setReportStartDate(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+          <input
+            type="date"
+            value={reportEndDate}
+            onChange={(e) => setReportEndDate(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          />
+        </div>
         <button
           type="button"
           onClick={handlePrintReport}
