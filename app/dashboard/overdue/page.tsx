@@ -43,6 +43,7 @@ function OverdueTable() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [printing, setPrinting] = useState(false);
 
   const DISPLAY_LIMIT = 50;
 
@@ -127,8 +128,41 @@ function OverdueTable() {
     }
   };
 
+  const handlePrintReport = async () => {
+    setPrinting(true);
+    try {
+      const response = await api.get<Response>("/dashboard/overdue-report", {
+        rawResponse: true,
+      });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `overdue_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to download overdue report");
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   return (
     <div>
+      <div className="mb-4 flex justify-end">
+        <button
+          type="button"
+          onClick={handlePrintReport}
+          disabled={printing}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+        >
+          {printing ? "Generating..." : "Print Report"}
+        </button>
+      </div>
       {loading ? (
         <div className="text-gray-600 text-sm">Loading...</div>
       ) : arrears.length === 0 ? (
