@@ -281,11 +281,11 @@ function OverdueTable() {
                       className={`border-b hover:bg-gray-50 ${item.is_cleared ? "" : "cursor-pointer"}`}
                       onClick={() => toggleRow(item)}
                     >
-                      <td className="px-4 py-2 text-sm">{item.customer_name || "—"}</td>
+                      <td className="px-4 py-2 text-sm">{item.customer_name || "â€”"}</td>
                       <td className="px-4 py-2 text-sm">{item.loan_id}</td>
-                      <td className="px-4 py-2 text-sm">KES {item.original_amount?.toLocaleString() || "—"}</td>
-                      <td className="px-4 py-2 text-sm">KES {item.remaining_amount?.toLocaleString() || "—"}</td>
-                      <td className="px-4 py-2 text-sm">{item.arrears_date ? new Date(item.arrears_date).toLocaleDateString() : "—"}</td>
+                      <td className="px-4 py-2 text-sm">KES {item.original_amount?.toLocaleString() || "â€”"}</td>
+                      <td className="px-4 py-2 text-sm">KES {item.remaining_amount?.toLocaleString() || "â€”"}</td>
+                      <td className="px-4 py-2 text-sm">{item.arrears_date ? new Date(item.arrears_date).toLocaleDateString() : "â€”"}</td>
                       <td className="px-4 py-2 text-sm">
                         <span className={`inline-block px-2 py-1 rounded text-xs ${item.is_cleared ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                           {item.is_cleared ? "Cleared" : "Active"}
