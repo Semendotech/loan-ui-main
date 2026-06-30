@@ -74,6 +74,11 @@ export default function DashboardOverviewPage() {
       });
       setChartData(trends);
       setSummary(((summaryRes as any).data ?? summaryRes) as SummaryMetrics);
+    } catch (err) {
+      console.error("Dashboard fetch failed:", err);
+      if (err instanceof Error && err.message.toLowerCase().includes("not authenticated")) {
+        router.push("/login");
+      }
     } finally {
       setLoading(false);
     }
