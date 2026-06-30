@@ -1,4 +1,4 @@
-ï»¿"use client";
+"use client";
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import toast from "react-hot-toast";
@@ -46,16 +46,21 @@ function OverdueTable() {
   const [printing, setPrinting] = useState(false);
   const [reportStartDate, setReportStartDate] = useState("");
   const [reportEndDate, setReportEndDate] = useState("");
+  const [search, setSearch] = useState("");
 
   const DISPLAY_LIMIT = 50;
 
-  const loadArrears = async (pageNumber = 0) => {
+  const loadArrears = async (pageNumber = 0, searchOverride?: string) => {
     setLoading(true);
     try {
+      const q = searchOverride !== undefined ? searchOverride : search;
       const params: Record<string, string> = {
         limit: String(DISPLAY_LIMIT),
         offset: String(pageNumber * DISPLAY_LIMIT),
       };
+      if (q.trim()) {
+        params.q = q.trim();
+      }
 
       const res = await api.get<{
         items?: any[];
@@ -88,6 +93,14 @@ function OverdueTable() {
   useEffect(() => {
     loadArrears();
   }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadArrears(0, search);
+    }, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const toggleRow = (item: any) => {
     if (item.is_cleared) return;
@@ -163,7 +176,18 @@ function OverdueTable() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-end justify-end gap-3">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Search Customer</label>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Name, phone, or ID number"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64"
+          />
+        </div>
+        <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
           <input
@@ -190,6 +214,7 @@ function OverdueTable() {
         >
           {printing ? "Generating..." : "Print Report"}
         </button>
+        </div>
       </div>
       {loading ? (
         <div className="text-gray-600 text-sm">Loading...</div>
@@ -256,11 +281,11 @@ function OverdueTable() {
                       className={`border-b hover:bg-gray-50 ${item.is_cleared ? "" : "cursor-pointer"}`}
                       onClick={() => toggleRow(item)}
                     >
-                      <td className="px-4 py-2 text-sm">{item.customer_name || "â€”"}</td>
+                      <td className="px-4 py-2 text-sm">{item.customer_name || "—"}</td>
                       <td className="px-4 py-2 text-sm">{item.loan_id}</td>
-                      <td className="px-4 py-2 text-sm">KES {item.original_amount?.toLocaleString() || "â€”"}</td>
-                      <td className="px-4 py-2 text-sm">KES {item.remaining_amount?.toLocaleString() || "â€”"}</td>
-                      <td className="px-4 py-2 text-sm">{item.arrears_date ? new Date(item.arrears_date).toLocaleDateString() : "â€”"}</td>
+                      <td className="px-4 py-2 text-sm">KES {item.original_amount?.toLocaleString() || "—"}</td>
+                      <td className="px-4 py-2 text-sm">KES {item.remaining_amount?.toLocaleString() || "—"}</td>
+                      <td className="px-4 py-2 text-sm">{item.arrears_date ? new Date(item.arrears_date).toLocaleDateString() : "—"}</td>
                       <td className="px-4 py-2 text-sm">
                         <span className={`inline-block px-2 py-1 rounded text-xs ${item.is_cleared ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                           {item.is_cleared ? "Cleared" : "Active"}
