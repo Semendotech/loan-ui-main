@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useEffect, useState } from "react";
-import { api, apiRequest } from "@/lib/api";
+import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
@@ -53,25 +53,34 @@ function UnmatchedPaymentsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [filterDate, setFilterDate] = useState("");
 
-  useEffect(() => {
-    api.get<UnmatchedPayment[]>("/c2b/unmatched-payments")
+  const fetchPayments = (date?: string) => {
+    setLoading(true);
+    const params: Record<string, string> = {};
+    if (date) params.date = date;
+    api.get<UnmatchedPayment[]>("/c2b/unmatched-payments", { params })
       .then(setPayments)
       .catch(() => setError("Failed to load unmatched payments."))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchPayments();
   }, []);
 
   const handlePrint = async () => {
     setDownloading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-      const res = await fetch(`${baseUrl}/c2b/unmatched-payments-pdf`, { credentials: "include" });
+      const qs = filterDate ? `?date=${encodeURIComponent(filterDate)}` : "";
+      const res = await fetch(`${baseUrl}/c2b/unmatched-payments-pdf${qs}`, { credentials: "include" });
       if (!res.ok) throw new Error("Failed");
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `unmatched_payments_${new Date().toISOString().slice(0,10)}.pdf`;
+      a.download = `unmatched_payments_${filterDate || new Date().toISOString().slice(0,10)}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch { window.print(); }
@@ -97,19 +106,36 @@ function UnmatchedPaymentsView() {
       </div>
 
       {/* Action bar - hidden when printing */}
-      <div className="mb-4 flex items-center justify-between print:hidden">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 print:hidden">
         <p className="text-sm text-gray-600">
           {payments.length === 0
             ? "No unmatched payments found."
             : `${payments.length} unmatched payment${payments.length !== 1 ? "s" : ""} · Total: ${formatKes(totalAmount)}`}
         </p>
-  <div className="flex gap-2">
+        <div className="flex flex-wrap items-end gap-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            />
+          </div>
           <button
-            onClick={() => { setLoading(true); api.get<UnmatchedPayment[]>("/c2b/unmatched-payments").then(setPayments).catch(() => setError("Failed to load.")).finally(() => setLoading(false)); }}
+            onClick={() => fetchPayments(filterDate)}
             className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 transition"
           >
             Refresh
           </button>
+          {filterDate && (
+            <button
+              onClick={() => { setFilterDate(""); fetchPayments(); }}
+              className="px-4 py-2 text-sm rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+            >
+              Clear
+            </button>
+          )}
           <button
               onClick={handlePrint}
               disabled={downloading}
