@@ -1,7 +1,7 @@
-"use client";
-
+﻿"use client";
 import React, { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import toast from "react-hot-toast";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 
@@ -40,6 +40,9 @@ function OverdueTable() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [totalArrears, setTotalArrears] = useState(0);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [amount, setAmount] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const DISPLAY_LIMIT = 50;
 
@@ -82,6 +85,47 @@ function OverdueTable() {
   useEffect(() => {
     loadArrears();
   }, []);
+
+  const toggleRow = (item: any) => {
+    if (item.is_cleared) return;
+    if (expandedId === item.id) {
+      setExpandedId(null);
+      setAmount("");
+    } else {
+      setExpandedId(item.id);
+      setAmount("");
+    }
+  };
+
+  const handlePay = async (item: any) => {
+    if (!amount) return;
+    const remaining = Number(item.remaining_amount ?? 0);
+    const numericAmount = parseFloat(amount);
+    if (!numericAmount || numericAmount <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+    if (remaining > 0 && numericAmount > remaining) {
+      toast.error(`Payment cannot exceed remaining balance. Remaining: KES ${remaining}`);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await api.post("/payments/record", {
+        loan_id: item.loan_id,
+        amount: numericAmount,
+      });
+      toast.success("Payment recorded");
+      setAmount("");
+      setExpandedId(null);
+      await loadArrears(page);
+    } catch (error: any) {
+      const message = error?.message || error?.response?.data?.detail || "Failed to record payment";
+      toast.error(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div>
@@ -145,18 +189,58 @@ function OverdueTable() {
               </thead>
               <tbody>
                 {arrears.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm">{item.customer_name || "—"}</td>
-                    <td className="px-4 py-2 text-sm">{item.loan_id}</td>
-                    <td className="px-4 py-2 text-sm">KES {item.original_amount?.toLocaleString() || "—"}</td>
-                    <td className="px-4 py-2 text-sm">KES {item.remaining_amount?.toLocaleString() || "—"}</td>
-                    <td className="px-4 py-2 text-sm">{item.arrears_date ? new Date(item.arrears_date).toLocaleDateString() : "—"}</td>
-                    <td className="px-4 py-2 text-sm">
-                      <span className={`inline-block px-2 py-1 rounded text-xs ${item.is_cleared ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                        {item.is_cleared ? "Cleared" : "Active"}
-                      </span>
-                    </td>
-                  </tr>
+                  <React.Fragment key={item.id}>
+                    <tr
+                      className={`border-b hover:bg-gray-50 ${item.is_cleared ? "" : "cursor-pointer"}`}
+                      onClick={() => toggleRow(item)}
+                    >
+                      <td className="px-4 py-2 text-sm">{item.customer_name || "—"}</td>
+                      <td className="px-4 py-2 text-sm">{item.loan_id}</td>
+                      <td className="px-4 py-2 text-sm">KES {item.original_amount?.toLocaleString() || "—"}</td>
+                      <td className="px-4 py-2 text-sm">KES {item.remaining_amount?.toLocaleString() || "—"}</td>
+                      <td className="px-4 py-2 text-sm">{item.arrears_date ? new Date(item.arrears_date).toLocaleDateString() : "—"}</td>
+                      <td className="px-4 py-2 text-sm">
+                        <span className={`inline-block px-2 py-1 rounded text-xs ${item.is_cleared ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                          {item.is_cleared ? "Cleared" : "Active"}
+                        </span>
+                      </td>
+                    </tr>
+                    {expandedId === item.id && (
+                      <tr className="border-b bg-gray-50">
+                        <td colSpan={6} className="px-4 py-4">
+                          <div className="flex flex-wrap items-end gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">
+                                Payment Amount (KES)
+                              </label>
+                              <input
+                                type="number"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="Enter amount"
+                                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handlePay(item)}
+                              disabled={submitting || !amount}
+                              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+                            >
+                              {submitting ? "Recording..." : "Record Payment"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setExpandedId(null); setAmount(""); }}
+                              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
             </table>
