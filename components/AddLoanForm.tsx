@@ -381,7 +381,8 @@ export default function AddLoanForm() {
       }
 
       const loanErrors = validateLoanForm(loanForm);
-      const guarantorErrors = validateGuarantorForm(guarantorForm);
+      const guarantorHasData = Object.values(guarantorForm).some((v) => v.trim() !== "");
+      const guarantorErrors = guarantorHasData ? validateGuarantorForm(guarantorForm) : {};
       const amount = parseFloat(loanForm.amount);
       const interestRate = parseFloat(loanForm.interest_rate);
 
@@ -402,8 +403,10 @@ export default function AddLoanForm() {
         amount,
         interest_rate: interestRate,
         start_date: loanForm.start_date,
-        guarantor: buildGuarantorPayload(guarantorForm),
       };
+      if (guarantorHasData) {
+        loanData.guarantor = buildGuarantorPayload(guarantorForm);
+      }
 
       const createdLoan = await api.post<CreatedLoanResponse>("/loans", loanData);
       toast.success("Loan created successfully");
@@ -666,7 +669,7 @@ export default function AddLoanForm() {
                 <h2 className="text-xl font-semibold mb-4">Guarantor Information</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="guarantor_name" className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <label htmlFor="guarantor_name" className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                     <input
                       type="text"
                       id="guarantor_name"
@@ -676,14 +679,13 @@ export default function AddLoanForm() {
                       onBlur={handleGuarantorBlur}
                       className={guarantorFieldClassName("name")}
                       placeholder="Enter guarantor full name"
-                      required
                     />
                     {guarantorFieldErrors.name && (
                       <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.name}</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="guarantor_id_number" className="block text-sm font-medium text-gray-700 mb-1">ID Number *</label>
+                    <label htmlFor="guarantor_id_number" className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
                     <input
                       type="text"
                       id="guarantor_id_number"
@@ -693,7 +695,6 @@ export default function AddLoanForm() {
                       onBlur={handleGuarantorBlur}
                       className={guarantorFieldClassName("id_number")}
                       placeholder="Enter 8-digit ID number"
-                      required
                       inputMode="numeric"
                       pattern="\d{8}"
                       maxLength={8}
@@ -703,7 +704,7 @@ export default function AddLoanForm() {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="guarantor_phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                    <label htmlFor="guarantor_phone" className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                     <input
                       type="tel"
                       id="guarantor_phone"
@@ -713,14 +714,13 @@ export default function AddLoanForm() {
                       onBlur={handleGuarantorBlur}
                       className={guarantorFieldClassName("phone")}
                       placeholder="e.g. 0712345678"
-                      required
                     />
                     {guarantorFieldErrors.phone && (
                       <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.phone}</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="guarantor_relationship" className="block text-sm font-medium text-gray-700 mb-1">Relationship *</label>
+                    <label htmlFor="guarantor_relationship" className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
                     <select
                       id="guarantor_relationship"
                       name="relationship"
@@ -728,7 +728,6 @@ export default function AddLoanForm() {
                       onChange={handleGuarantorChange}
                       onBlur={handleGuarantorBlur}
                       className={guarantorFieldClassName("relationship")}
-                      required
                     >
                       <option value="">Select relationship</option>
                       <option value="Family">Family</option>
@@ -742,7 +741,7 @@ export default function AddLoanForm() {
                     )}
                   </div>
                   <div>
-                    <label htmlFor="guarantor_location" className="block text-sm font-medium text-gray-700 mb-1">Location *</label>
+                    <label htmlFor="guarantor_location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                     <input
                       type="text"
                       id="guarantor_location"
@@ -752,7 +751,6 @@ export default function AddLoanForm() {
                       onBlur={handleGuarantorBlur}
                       className={guarantorFieldClassName("location")}
                       placeholder="Enter guarantor location"
-                      required
                     />
                     {guarantorFieldErrors.location && (
                       <p className="text-sm text-red-600 mt-1">{guarantorFieldErrors.location}</p>
