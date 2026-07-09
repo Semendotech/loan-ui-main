@@ -44,6 +44,10 @@ function ManageCustomers() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingCustomerId, setDeletingCustomerId] = useState<number | null>(null);
+  const [editingCustomer, setEditingCustomer] = useState<{ id: number; name: string } | null>(null);
+  const [editPhone, setEditPhone] = useState("");
+  const [editIdNumber, setEditIdNumber] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [page, setPage] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
   const FALLBACK_AVATAR = "/avatar-placeholder.svg";
@@ -127,6 +131,43 @@ function ManageCustomers() {
       toast.error(message);
     } finally {
       setDeletingCustomerId(null);
+    }
+  };
+
+  const openEditModal = (customer: { id: number; name: string; phone: string | null; id_number: string }) => {
+    setEditingCustomer({ id: customer.id, name: customer.name });
+    setEditPhone(customer.phone || "");
+    setEditIdNumber(customer.id_number || "");
+  };
+
+  const closeEditModal = () => {
+    setEditingCustomer(null);
+    setEditPhone("");
+    setEditIdNumber("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCustomer) return;
+    try {
+      setSavingEdit(true);
+      const updated = await api.patch<{ id: number; phone: string; id_number: string }>(
+        `/customers/${editingCustomer.id}`,
+        { phone: editPhone.trim(), id_number: editIdNumber.trim() }
+      );
+      setCustomers((prev) =>
+        prev.map((item) =>
+          item.id === editingCustomer.id
+            ? { ...item, phone: (updated as any)?.phone ?? editPhone, id_number: (updated as any)?.id_number ?? editIdNumber }
+            : item
+        )
+      );
+      toast.success("Customer updated successfully");
+      closeEditModal();
+    } catch (error: any) {
+      const message = error?.message || "Failed to update customer";
+      toast.error(message);
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -283,6 +324,15 @@ function ManageCustomers() {
                     {isAdmin ? (
                       <button
                         type="button"
+                        onClick={() => openEditModal({ id: c.id, name: c.name || "Customer", phone: c.phone, id_number: c.id_number })}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </button>
+                    ) : null}
+                    {isAdmin ? (
+                      <button
+                        type="button"
                         onClick={() => handleDeleteCustomer({ id: c.id, name: c.name || "Customer" })}
                         disabled={deletingCustomerId === c.id}
                         className="text-xs text-red-600 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
@@ -303,6 +353,49 @@ function ManageCustomers() {
           </div>
         </>
       )}
+      {editingCustomer ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-lg">
+            <h4 className="text-base font-semibold text-gray-900 mb-1">Edit Customer</h4>
+            <p className="text-xs text-gray-500 mb-4">{editingCustomer.name}</p>
+
+            <label className="block text-xs font-medium text-gray-600 mb-1">Phone Number</label>
+            <input
+              value={editPhone}
+              onChange={(e) => setEditPhone(e.target.value)}
+              className="w-full px-3 py-2 border rounded text-sm mb-3"
+              placeholder="Phone number"
+            />
+
+            <label className="block text-xs font-medium text-gray-600 mb-1">ID Number</label>
+            <input
+              value={editIdNumber}
+              onChange={(e) => setEditIdNumber(e.target.value)}
+              className="w-full px-3 py-2 border rounded text-sm mb-4"
+              placeholder="ID number"
+            />
+
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeEditModal}
+                disabled={savingEdit}
+                className="px-3 py-2 text-sm rounded border border-gray-300 text-gray-700 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveEdit}
+                disabled={savingEdit}
+                className="px-3 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingEdit ? "Saving..." : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
