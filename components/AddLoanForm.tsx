@@ -297,9 +297,12 @@ export default function AddLoanForm() {
     e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+    const guarantorHasData = Object.entries(guarantorForm).some(
+      ([key, v]) => (key === name ? value : v).trim() !== ""
+    );
     setGuarantorFieldErrors((prev) => ({
       ...prev,
-      [name]: validateGuarantorField(name, value),
+      [name]: guarantorHasData ? validateGuarantorField(name, value) : "",
     }));
   };
 
