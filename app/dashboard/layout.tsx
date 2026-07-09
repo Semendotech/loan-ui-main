@@ -53,6 +53,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </NavLink>
               </li>
               <li>
+                <NavLink href="/dashboard/disbursed-loans" active={pathname?.startsWith("/dashboard/disbursed-loans") ?? false}>
+                  <CreditCard className="w-5 h-5" />
+                  <span>Disbursed Loans</span>
+                </NavLink>
+              </li>
+              <li>
                 <NavLink href="/dashboard/overdue" active={pathname?.startsWith("/dashboard/overdue") ?? false}>
                   <CreditCard className="w-5 h-5" />
                   <span>Clear Overdue</span>
