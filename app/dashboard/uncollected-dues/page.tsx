@@ -14,6 +14,7 @@ interface UncollectedDueItem {
   daily_instalment: number;
   loan_balance: number;
   skipped_days: number;
+  arrears: number;
 }
 
 export default function UncollectedDuesPage() {
@@ -136,12 +137,15 @@ export default function UncollectedDuesPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
                   Skipped Days
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                  Arrears
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {!loading && dues.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
                     All dues have been collected for today.
                   </td>
                 </tr>
@@ -162,6 +166,25 @@ export default function UncollectedDuesPage() {
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900">
                       {row.skipped_days != null ? `${row.skipped_days}` : "…"}
+                    </td>
+                    <td
+                      className={`px-4 py-3 text-sm font-semibold ${
+                        row.arrears == null
+                          ? "text-gray-900"
+                          : row.arrears > 0
+                          ? "text-green-700"
+                          : row.arrears < 0
+                          ? "text-red-700"
+                          : "text-gray-900"
+                      }`}
+                    >
+                      {row.arrears == null
+                        ? "…"
+                        : row.arrears > 0
+                        ? `+${formatKesCurrency(row.arrears)}`
+                        : row.arrears < 0
+                        ? `-${formatKesCurrency(Math.abs(row.arrears))}`
+                        : formatKesCurrency(0)}
                     </td>
                   </tr>
                 ))
