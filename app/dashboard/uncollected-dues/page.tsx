@@ -21,12 +21,13 @@ export default function UncollectedDuesPage() {
   const [dues, setDues] = useState<UncollectedDueItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [fromDate, setFromDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [toDate, setToDate] = useState(() => new Date().toISOString().slice(0, 10));
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
-    params.set("start_date", selectedDate);
-    params.set("end_date", selectedDate);
+    params.set("start_date", fromDate);
+    params.set("end_date", toDate);
     return `?${params.toString()}`;
   };
 
@@ -47,7 +48,7 @@ export default function UncollectedDuesPage() {
 
   useEffect(() => {
     load();
-  }, [selectedDate]);
+  }, [fromDate, toDate]);
 
   const handleDownloadReport = async () => {
     try {
@@ -59,7 +60,7 @@ export default function UncollectedDuesPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `uncollected_dues_report_${selectedDate}.pdf`;
+      a.download = `uncollected_dues_report_${fromDate}_to_${toDate}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -86,7 +87,7 @@ export default function UncollectedDuesPage() {
             Uncollected Dues
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Active loans where today's instalment payment has not been received
+            Active loans that are behind on payments within the selected date range
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-[1fr_auto] items-end w-full">
@@ -94,15 +95,27 @@ export default function UncollectedDuesPage() {
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <div className="text-sm text-gray-600">Uncollected dues report</div>
-                <div className="text-base font-semibold text-gray-900 mt-1">View uncollected dues as of a specific day</div>
+                <div className="text-base font-semibold text-gray-900 mt-1">View uncollected dues within a date range</div>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-2 border rounded text-sm"
-                />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="px-3 py-2 border rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="px-3 py-2 border rounded text-sm"
+                  />
+                </div>
                 <button
                   onClick={handleDownloadReport}
                   disabled={downloading}
