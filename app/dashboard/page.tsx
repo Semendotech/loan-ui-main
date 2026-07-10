@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cart
 import { api } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface DashboardMetrics {
   active_loans: number;
@@ -124,9 +125,9 @@ export default function DashboardOverviewPage() {
   return (
     <section>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <StatCard label="Active Loans" value={metrics.activeLoans} color="text-blue-700" accent="bg-blue-50" />
+        <StatCard label="Active Loans" value={metrics.activeLoans} color="text-blue-700" accent="bg-blue-50" href="/dashboard/active-loans" />
         <StatCard label="Active Loans Outstanding" prefix="KSh " value={metrics.loansOutstanding} color="text-blue-900" accent="bg-blue-50" />
-        <StatCard label="Overdue Loans" value={metrics.overdue} color="text-rose-700" accent="bg-rose-50" />
+        <StatCard label="Overdue Loans" value={metrics.overdue} color="text-rose-700" accent="bg-rose-50" href="/dashboard/overdue" />
         <StatCard label="Overdue Remaining" prefix="KSh " value={metrics.overdueOutstanding} color="text-rose-900" accent="bg-rose-50" />
       </div>
 
@@ -153,14 +154,14 @@ export default function DashboardOverviewPage() {
             <div className="text-sm text-gray-600">Loading...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <StatCard label="Total Paid (Today)" prefix="KSh " value={summary.total_paid_today ?? 0} color="text-purple-700" accent="bg-purple-50" />
+              <StatCard label="Total Paid (Today)" prefix="KSh " value={summary.total_paid_today ?? 0} color="text-purple-700" accent="bg-purple-50" href="/dashboard/payment-logs" />
               <StatCard label="Total Paid (This Week)" prefix="KSh " value={summary.total_paid_this_week ?? 0} color="text-green-700" accent="bg-green-50" />
               <StatCard label="Total Paid (This Month)" prefix="KSh " value={summary.total_paid_this_month ?? 0} color="text-teal-700" accent="bg-teal-50" />
               <StatCard label="Completed Loans (This Month)" prefix="KSh " value={summary.completed_loans_amount_this_month} color="text-emerald-700" accent="bg-emerald-50" />
-              <StatCard label="Active Loans (Started This Month)" value={summary.active_loans_count_this_month} color="text-blue-700" accent="bg-blue-50" />
+              <StatCard label="Active Loans (Started This Month)" value={summary.active_loans_count_this_month} color="text-blue-700" accent="bg-blue-50" href="/dashboard/active-loans" />
               <StatCard label="Interest (Completed, Last 3 Months)" prefix="KSh " value={summary.interest_last_three_months} color="text-indigo-700" accent="bg-indigo-50" />
-              <StatCard label="Total Customers" value={summary.total_customers ?? 0} color="text-slate-700" accent="bg-slate-50" />
-              <StatCard label="Defaulters" value={summary.defaulters_count ?? 0} color="text-red-700" accent="bg-red-50" />
+              <StatCard label="Total Customers" value={summary.total_customers ?? 0} color="text-slate-700" accent="bg-slate-50" href="/dashboard/customers" />
+              <StatCard label="Defaulters" value={summary.defaulters_count ?? 0} color="text-red-700" accent="bg-red-50" href="/dashboard/defaulters" />
               <div className="p-4 rounded-lg border shadow-sm bg-slate-50 md:col-span-2">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
@@ -192,7 +193,7 @@ export default function DashboardOverviewPage() {
 }
 
 // Animated counter used in overview
-function StatCard({ label, value, prefix = "", color = "text-gray-900", accent = "bg-gray-50" }: { label: string; value: number; prefix?: string; color?: string; accent?: string; }) {
+function StatCard({ label, value, prefix = "", color = "text-gray-900", accent = "bg-gray-50", href }: { label: string; value: number; prefix?: string; color?: string; accent?: string; href?: string; }) {
   const [display, setDisplay] = React.useState(0);
   React.useEffect(() => {
     const duration = 1200;
@@ -211,11 +212,17 @@ function StatCard({ label, value, prefix = "", color = "text-gray-900", accent =
 
   const formatted = new Intl.NumberFormat().format(display);
 
-  return (
-    <div className={`p-5 rounded-lg border shadow-sm ${accent}`}>
+  const cardContent = (
+    <div className={`p-5 rounded-lg border shadow-sm ${accent}${href ? " transition hover:shadow-md hover:-translate-y-0.5 cursor-pointer" : ""}`}>
       <div className="text-sm text-gray-500">{label}</div>
       <div className={`mt-2 text-2xl font-bold ${color}`}>{prefix}{formatted}</div>
     </div>
   );
+
+  if (href) {
+    return <Link href={href} className="block">{cardContent}</Link>;
+  }
+
+  return cardContent;
 }
 
