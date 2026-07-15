@@ -116,7 +116,7 @@ export default function CustomerDetailsPage() {
       return;
     }
     try {
-      await api.put(`/payments/installments/${inst.id}`, { amount: amt });
+      await api.put(`/payments/installment/${inst.id}`, { amount: amt });
       await fetchCustomer();
       setEditingInstallmentId(null);
     } catch (e: any) {
@@ -135,7 +135,7 @@ export default function CustomerDetailsPage() {
       return;
     }
     try {
-      await api.delete(`/payments/installments/${inst.id}`);
+      await api.delete(`/payments/installment/${inst.id}`);
       await fetchCustomer();
     } catch (e: any) {
       alert(e?.response?.data?.detail || e?.message || "Failed to delete installment");
