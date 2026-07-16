@@ -259,22 +259,23 @@ function ManageCustomers() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {customers.map((c) => {
-              const hasActiveLoan =
-                typeof c.has_active_loan === "boolean"
-                  ? c.has_active_loan
-                  : Array.isArray(c.loans)
-                  ? c.loans.some(
-                      (l: any) => String(l.status || "").toUpperCase() === "ACTIVE"
-                    )
-                  : false;
+              const loanState = c.status || "Clean";
 
-              const statusLabel = hasActiveLoan ? "Active loan" : "No active loan";
-              const badgeClasses = hasActiveLoan
-                ? "bg-red-100 text-red-700"
-                : "bg-emerald-100 text-emerald-700";
-              const cardClasses = hasActiveLoan
-                ? "border-red-200 bg-red-50"
-                : "border-emerald-200 bg-green-50";
+              const statusLabel =
+                loanState === "Active" ? "Active loan"
+                : loanState === "Overdue" ? "Overdue"
+                : loanState === "Defaulter" ? "Defaulter"
+                : "No active loan";
+
+              const badgeClasses =
+                loanState === "Active" ? "bg-emerald-100 text-emerald-700"
+                : loanState === "Overdue" || loanState === "Defaulter" ? "bg-red-100 text-red-700"
+                : "bg-gray-100 text-gray-600";
+
+              const cardClasses =
+                loanState === "Active" ? "border-emerald-200 bg-green-50"
+                : loanState === "Overdue" || loanState === "Defaulter" ? "border-red-200 bg-red-50"
+                : "border-gray-200 bg-white";
 
               return (
                 <div
