@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_VERSION = 'loan-manager-cache-v2026-07-16T20-35-38-571Z';
+const CACHE_VERSION = 'loan-manager-cache-v2026-07-16T20-58-52-453Z';
 const CACHE_NAME = 'loan-manager-cache-' + CACHE_VERSION;
 const urlsToCache = [
   '/',

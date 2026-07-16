@@ -12,6 +12,7 @@ interface UncollectedDueItem {
   customer_name: string | null;
   customer_phone: string | null;
   customer_id_number: string;
+  daily_instalment: number;
   loan_balance: number;
   start_date: string;
   due_date: string | null;
@@ -110,6 +111,7 @@ export default function UncollectedDuesPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer Name</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Phone Number</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan Balance</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Date Taken</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Due Date</th>
@@ -118,7 +120,7 @@ export default function UncollectedDuesPage() {
             <tbody className="divide-y divide-gray-100">
               {!loading && dues.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-gray-500">
+                  <td colSpan={6} className="px-4 py-10 text-center text-gray-500">
                     All dues have been collected for this date.
                   </td>
                 </tr>
@@ -127,6 +129,9 @@ export default function UncollectedDuesPage() {
                   <tr key={row.loan_id ?? idx} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.customer_name ?? "..."}</td>
                     <td className="px-4 py-3 text-sm text-gray-800">{row.customer_phone ?? "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-800">
+                      {row.daily_instalment != null ? formatKesCurrency(row.daily_instalment) : "..."}
+                    </td>
                     <td className="px-4 py-3 text-sm font-semibold text-orange-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "..."}
                     </td>
