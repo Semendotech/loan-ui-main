@@ -83,6 +83,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </NavLink>
               </li>
               <li>
+                /* ARREARS_NAV_APPLIED */
+                <NavLink href="/dashboard/arrears" active={pathname?.startsWith("/dashboard/arrears") ?? false}>
+                  <AlertTriangle className="w-5 h-5" />
+                  <span>Arrears</span>
+                </NavLink>
+              </li>
+              <li>
                 <NavLink href="/dashboard/cleared-loans" active={pathname?.startsWith("/dashboard/cleared-loans") ?? false}>
                   <CheckCircle2 className="w-5 h-5" />
                   <span>Cleared Loans</span>
