@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { formatKesCurrency } from "@/lib/loanCalculations";
 import toast from "react-hot-toast";
-import { AlertTriangle, Download, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertTriangle, Download, ChevronDown, ChevronRight, ChevronLeft, Search } from "lucide-react";
 
 interface ArrearsItem {
   loan_id: number;
@@ -26,14 +26,25 @@ export default function ArrearsPage() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [expandedLoanId, setExpandedLoanId] = useState<number | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
+  const limit = 50;
 
   const load = async () => {
     setLoading(true);
     try {
-      const data = await api.get(`/dashboard/arrears`);
-      const response = (data as { data?: { items?: ArrearsItem[] }; items?: ArrearsItem[] })?.data ?? data;
+      const params = new URLSearchParams();
+      params.set("limit", String(limit));
+      params.set("offset", String(offset));
+      if (query.trim()) params.set("q", query.trim());
+      const data = await api.get(`/dashboard/arrears?${params.toString()}`);
+      const response = (data as { data?: { items?: ArrearsItem[]; total?: number }; items?: ArrearsItem[]; total?: number })?.data ?? data;
       const list = (response as { items?: ArrearsItem[] })?.items;
+      const count = (response as { total?: number })?.total;
       setItems(Array.isArray(list) ? list : []);
+      setTotal(typeof count === "number" ? count : 0);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load arrears");
@@ -44,7 +55,16 @@ export default function ArrearsPage() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [offset, query]);
+
+  // Debounce search input -> query, resetting to the first page on a new search
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setOffset(0);
+      setQuery(searchInput);
+    }, 400);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
 
   const handleDownloadReport = async () => {
     try {
@@ -96,6 +116,17 @@ export default function ArrearsPage() {
           <Download className="w-4 h-4" />
           {downloading ? "Generating..." : "Print PDF"}
         </button>
+      </div>
+
+      <div className="mb-4 relative max-w-sm">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+          placeholder="Search by name, phone, or ID number..."
+          className="w-full pl-9 pr-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-red-200"
+        />
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -168,6 +199,32 @@ export default function ArrearsPage() {
           </table>
         </div>
       </div>
+
+      {!loading && total > 0 && (
+        <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+          <div>
+            Showing {offset + 1}-{Math.min(offset + limit, total)} of {total}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setOffset((prev) => Math.max(0, prev - limit))}
+              disabled={offset === 0}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+            <button
+              onClick={() => setOffset((prev) => (prev + limit < total ? prev + limit : prev))}
+              disabled={offset + limit >= total}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded border text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
