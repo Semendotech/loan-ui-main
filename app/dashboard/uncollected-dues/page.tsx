@@ -14,8 +14,8 @@ interface UncollectedDueItem {
   customer_id_number: string;
   daily_instalment: number;
   loan_balance: number;
-  start_date: string;
   due_date: string | null;
+  paid: number;
 }
 
 export default function UncollectedDuesPage() {
@@ -109,12 +109,12 @@ export default function UncollectedDuesPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer Name</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Phone Number</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily Instalment</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Loan Balance</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Date Taken</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Due Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Phone</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Due-date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Daily</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Balance</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Paid</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -129,14 +129,16 @@ export default function UncollectedDuesPage() {
                   <tr key={row.loan_id ?? idx} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{row.customer_name ?? "..."}</td>
                     <td className="px-4 py-3 text-sm text-gray-800">{row.customer_phone ?? "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-800">{row.due_date ?? "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-800">
                       {row.daily_instalment != null ? formatKesCurrency(row.daily_instalment) : "..."}
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-orange-700">
                       {row.loan_balance != null ? formatKesCurrency(row.loan_balance) : "..."}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-800">{row.start_date ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-800">{row.due_date ?? "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-800">
+                      {row.paid ? formatKesCurrency(row.paid) : "0"}
+                    </td>
                   </tr>
                 ))
               )}
