@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -83,7 +83,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </NavLink>
               </li>
               <li>
-                /* ARREARS_NAV_APPLIED */
                 <NavLink href="/dashboard/arrears" active={pathname?.startsWith("/dashboard/arrears") ?? false}>
                   <AlertTriangle className="w-5 h-5" />
                   <span>Arrears</span>
