@@ -57,6 +57,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Never intercept cross-origin requests (e.g. calls to the Render
+  // backend API). Let them go straight to the network so real fetch
+  // failures surface to the app's own error handling, instead of the
+  // service worker's cache-fallback logic throwing on uncached URLs.
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
   if (isNavigationRequest(request)) {
     event.respondWith(
       fetch(request)
